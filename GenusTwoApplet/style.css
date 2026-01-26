@@ -1,36 +1,231 @@
 body { font-family: sans-serif; text-align: center; }
-        table { margin: 0 auto; border-collapse: collapse; }
-        td, th { border: 1px solid #333; padding: 4px 8px; }
+table { margin: 0 auto; border-collapse: collapse; }
+td, th { border: 1px solid #333; padding: 4px 8px; }
 
-        button {
-            font-size: 1em;
-            padding: 2px 4px;
-            margin: 4px;
-        }
+button {
+    font-size: 1em;
+    padding: 2px 4px;
+    margin: 4px;
+}
 
-        input{
-            margin: 2px;
-        }
 
-        #periodMatrix { margin-top: 20px; }
-        #period-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-        .period-column {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 60px;
-        }
-        .period-column button {
-            width: 32px;
-            height: 28px;
-            font-size: 1.2em;
-            margin: 2px 0;
-        }
-        .period-counter {
-            font-size: 1.1em;
-            margin: 2px 0;
-        }
+
+
+#canvas-frame {
+    display: inline-block;
+    padding: 5px;
+    margin:5px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    align-content: center;
+}
+#canvas-container {
+    display: inline-flex;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+
+
+
+
+
+
+
+
+#period-frame{
+    display: inline-flex;
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+#hyperelliptic-section {
+    display: inline-flex;
+    flex-direction: column;
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    font-size: 14px;
+    text-align: center;
+
+}
+
+#hyperelliptic-section .slider-frame {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 5px;
+    padding: 5px;
+    width: 8em;
+}
+#slider-row{
+    display: flex;
+}
+#hyperelliptic-section .slider-input {
+    width: 100%;
+    accent-color: #555;
+    margin: 0;
+}
+
+.differentials{
+    font-size: 14px;
+    margin-top:5px;
+    padding:5px;
+}
+
+
+
+
+/* Period matrix container */
+#period-matrix {
+    background: #f7f7f7;
+    padding: 6px;                              /* no extra padding inside container */
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+/* 2x4 matrix grid */
+.period-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 60px);
+    grid-template-rows: repeat(2, 40px);
+    gap: 6px;
+}
+
+/* Individual cells */
+.period-cell {
+    display: flex;              /* flex for centering */
+    align-items: center;        /* vertical center */
+    justify-content: center;    /* horizontal center */
+    font-family: monospace;
+    font-size: 14px;
+    width: 60px;                /* fixed width */
+    height: 40px;               /* fixed height */
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    box-sizing: border-box;     /* include border in width/height */
+    margin: 0;                  /* no extra margin */
+    padding: 0;                 /* no padding */
+    color: #333;
+}
+
+
+
+
+
+
+.period-controls {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    text-align: center;
+    font-size: 14px;
+}
+.period-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+}
+.period-column button {
+    width: 32px;
+    height: 28px;
+    font-size: 1.2em;
+    margin: 2px 0;
+}
+.period-counter {
+    font-size: 1.1em;
+    margin: 2px 0;
+}
+
+
+
+
+
+
+
+#projection-frame{
+    display: inline-flex;
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+#controls-view{
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    text-align: center;
+    font-size: 14px;
+    justify-content: space-evenly;
+    align-items: center;
+}
+#controls-view button {
+  width: 10em;
+  height: 2em;
+  margin-top: 5px 0;
+}
+#projectionMatrix {
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    text-align: center;
+    font-size: 14px;
+}
+#projectionMatrixTemplates{
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+#projectionMatrix button {
+  width: 8em;
+  height: 2.5em;
+}
+#controls-hint {
+    
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    text-align: center;
+    font-size: 14px;
+    align-content: center;
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 4px 0;
+}
+
+.key {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+.controls-caption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.4;
+}
