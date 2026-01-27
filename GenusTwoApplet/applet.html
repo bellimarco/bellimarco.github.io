@@ -21,22 +21,24 @@
     <script src="sketch.js"></script>
 
     <head>    
-        <title>Genus 2 Surface Applet</title>
+        <title>Genus Two Curves Applet</title>
     </head>
     <body>
-        <h1 style="margin:20px">Genus Two Curves.</h1>
+        <h2 style="margin:20px">Exploring images of hyperelliptic integrals of first and second kind, for varying moduli of their Legendre normal forms...</h2>
+        <h3 style="margin:20px">...or, in fancy terms, genus two curves into their Jacobian, with varying $\Theta$-divisor.</h3>
 
         <div id="canvas-frame">
             <div style="display: flex;">
                 <div id="canvas-container"></div>
                 <div>
                     <div id="controls-view">
-                        <button onclick="toggleAnimation()" style="display:block">Toggle animation</button>
-                        <button onclick="toggleAutofocus()" style="display:block">Toggle auto focus</button>
-                        <button onclick="toggleLineMesh()" style="display:block">Toggle line mesh</button>
-                        <button onclick="toggleVertexLabels()" style="display:block">Toggle vertex labels</button>
-                        <button onclick="toggleAxes()" style="display:block">Toggle axes</button>
+                        <button id="btn-animation" onclick="toggleAnimation()">Toggle animation</button>
+                        <button id="btn-autofocus" onclick="toggleAutofocus()">Toggle auto focus</button>
+                        <button id="btn-linemesh" onclick="toggleLineMesh()">Toggle line mesh</button>
+                        <button id="btn-vertexlabels" onclick="toggleVertexLabels()">Toggle vertex labels</button>
+                        <button id="btn-axes" onclick="toggleAxes()">Toggle axes</button>
                     </div>
+
                     <div id="controls-hint">
                         <div class="key-row">
                             <div class="key">
@@ -178,7 +180,9 @@
             <div id="projection-frame">
             
                 <div id="projectionMatrix">
-                    <h4>Projection Matrix &nbsp; $\mathbb{C}^2 \stackrel{\small (\textbf{Re}_1,\textbf{Im}_1,\textbf{Re}_2,\textbf{Im}_2)}{\longrightarrow} \mathbb{R}^4 \rightarrow \mathbb{R}^3$</h4>
+                    <h4>Projection Matrix &nbsp; $\mathbb{C}^2
+                        \stackrel{\small (\textbf{Re}_1,\textbf{Im}_1,\textbf{Re}_2,\textbf{Im}_2)}{\longrightarrow}
+                        \mathbb{R}^4 \rightarrow \mathbb{R}^3$</h4>
                     <div id="projectionMatrixTemplates">
                         <button id="projMixed">Mixed</button>
                         <button id="projC1">$\mathbb{C}^2 \rightarrow \mathbb{C}\times\{0\}$</button>
@@ -192,8 +196,9 @@
         </div>
 
         <br>
+        <br>
         <hr>
-        <address>Marco Belli. Last update: January 27th, 2025<br>
+        <address style="text-align: left;">Marco Belli. Last update: January 27th, 2025<br>
         </address>
         <br>
         <br>

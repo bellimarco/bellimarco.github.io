@@ -451,11 +451,11 @@ function setup() {
     // canvas.mouseDragged(CanvasMouseDragged); // this is set globally
     //canvas.keyIsDown(CanvasKeyPressed);
 
+    setupDOM();
+
     setupHyperellipticIntegrators();
     integralsArray = new IntegralsArray(parseFloat(k1Slider.value), parseFloat(k2Slider.value),true);
 
-    buildProjectionMatrixTable();
-    setupProjectionMatrixButtons();
     updateProjectionMatrix(ProjectionTemplates.mixed);
         
     surfacesTensor = new SurfacesTensor(integralsArray,surfacesTensorPeriodStart,surfacesTensorPeriodicityStart, smoothingLevel);
@@ -1331,6 +1331,118 @@ function drawAxes(fit = false) {
 // ==================== DOM CONTROL =================================
 
 
+function setupDOM() {
+
+    document.getElementById("btn-animation")
+        .classList.toggle("is-on", runAnimation);
+    document.getElementById("btn-autofocus")
+        .classList.toggle("is-on", autoFocus);
+    document.getElementById("btn-linemesh")
+        .classList.toggle("is-on", showLineMeshes);
+    document.getElementById("btn-vertexlabels")
+        .classList.toggle("is-on", showVertexLabels);
+    document.getElementById("btn-axes")
+        .classList.toggle("is-on", showAxes);
+
+
+    // building Projection Matrix
+    const table = document.getElementById('projectionMatrixTable');
+    table.innerHTML = '';
+    for (let i = 0; i < ProjectionMatrix.length; i++) {
+        const tr = document.createElement('tr');
+        for (let j = 0; j < ProjectionMatrix[i].length; j++) {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.id = "inputProj"+i+j;
+            input.type = 'number';
+            input.step = '0.1';
+            input.max = '2.5'; input.min = '-2.5';
+            input.value = ProjectionMatrix[i][j];
+            input.style.width = '70px';
+            input.addEventListener('input', () => {
+                ProjectionMatrix[i][j] = parseFloat(input.value) || 0;
+                updateProjectionMatrix()
+            });
+            td.appendChild(input);
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+    }
+
+    document.getElementById('projMixed')
+        .addEventListener('click', () =>
+            updateProjectionMatrix(ProjectionTemplates.mixed)
+        );
+
+    document.getElementById('projC1')
+        .addEventListener('click', () =>
+            updateProjectionMatrix(ProjectionTemplates.C1)
+        );
+
+    document.getElementById('projC2')
+        .addEventListener('click', () =>
+            updateProjectionMatrix(ProjectionTemplates.C2)
+        ); 
+}
+
+function toggleAnimation() {
+    runAnimation = !runAnimation;
+    document
+        .getElementById("btn-animation")
+        .classList.toggle("is-on", runAnimation);
+}
+function toggleAutofocus() {
+    autoFocus = !autoFocus;
+    document
+        .getElementById("btn-autofocus")
+        .classList.toggle("is-on", autoFocus);
+}
+function toggleLineMesh() {
+    showLineMeshes = !showLineMeshes;
+    document
+        .getElementById("btn-linemesh")
+        .classList.toggle("is-on", showLineMeshes);
+}
+function toggleVertexLabels() {
+    showVertexLabels = !showVertexLabels;
+    if(!showLineMeshes) toggleLineMesh();
+    document
+        .getElementById("btn-vertexlabels")
+        .classList.toggle("is-on", showVertexLabels);
+}
+function toggleAxes() {
+    showAxes = !showAxes;
+    document
+        .getElementById("btn-axes")
+        .classList.toggle("is-on", showAxes);
+}
+
+function updateProjectionMatrix(newMatrix) {
+    if(newMatrix){
+        for (let i = 0; i < newMatrix.length; i++) {
+            for (let j = 0; j < newMatrix[i].length; j++) {
+                ProjectionMatrix[i][j] = newMatrix[i][j];
+            }
+        }
+    }
+    axis4Dir[0] = ProjectionMatrix[0][3];
+    axis4Dir[1] = ProjectionMatrix[1][3];
+    axis4Dir[2] = ProjectionMatrix[2][3];
+    // rebuild table inputs so values update visually
+    for (let i = 0; i < ProjectionMatrix.length; i++) {
+        for (let j = 0; j < ProjectionMatrix[i].length; j++) {
+            const input = document.getElementById('inputProj'+i+j);
+            input.value = ProjectionMatrix[i][j];
+        }
+    }
+
+    if(surfacesTensor){
+        surfacesTensor.updateProjection();
+        surfacesTensor.updateScreen();
+    }
+}
+
+
 let periodCounts = surfacesTensorPeriodStart;
 function periodPlus(i) {
     periodCounts[i]++;
@@ -1371,98 +1483,3 @@ function updatePeriodicityCounter(i) {
     document.getElementById(`periodicityCount${i}`).innerText = periodicityCounts[i];
 }
 
-
-
-
-// =========    PROJECTION  ==========
-
-function toggleAxes() {
-    showAxes = !showAxes;
-}
-function toggleAnimation() {
-    runAnimation = !runAnimation;
-}
-function toggleAutofocus() {
-    autoFocus = !autoFocus;
-}
-function toggleLineMesh() {
-    showLineMeshes = !showLineMeshes;
-}
-function toggleVertexLabels() {
-    showVertexLabels = !showVertexLabels;
-    if(!showLineMeshes) toggleLineMesh();
-}
-
-
-function buildProjectionMatrixTable() {
-    const table = document.getElementById('projectionMatrixTable');
-    table.innerHTML = '';
-
-    for (let i = 0; i < ProjectionMatrix.length; i++) {
-        const tr = document.createElement('tr');
-
-        for (let j = 0; j < ProjectionMatrix[i].length; j++) {
-            const td = document.createElement('td');
-
-            const input = document.createElement('input');
-            input.id = "inputProj"+i+j;
-            input.type = 'number';
-            input.step = '0.1';
-            input.max = '2.5';
-            input.min = '-2.5';
-            input.value = ProjectionMatrix[i][j];
-
-            input.style.width = '70px';
-
-            input.addEventListener('input', () => {
-                ProjectionMatrix[i][j] = parseFloat(input.value) || 0;
-                updateProjectionMatrix()
-            });
-
-            td.appendChild(input);
-            tr.appendChild(td);
-        }
-
-        table.appendChild(tr);
-    }
-}
-function setupProjectionMatrixButtons() {
-    document.getElementById('projMixed')
-        .addEventListener('click', () =>
-            updateProjectionMatrix(ProjectionTemplates.mixed)
-        );
-
-    document.getElementById('projC1')
-        .addEventListener('click', () =>
-            updateProjectionMatrix(ProjectionTemplates.C1)
-        );
-
-    document.getElementById('projC2')
-        .addEventListener('click', () =>
-            updateProjectionMatrix(ProjectionTemplates.C2)
-        );
-}
-function updateProjectionMatrix(newMatrix) {
-    if(newMatrix){
-        for (let i = 0; i < newMatrix.length; i++) {
-            for (let j = 0; j < newMatrix[i].length; j++) {
-                ProjectionMatrix[i][j] = newMatrix[i][j];
-            }
-        }
-    }
-    axis4Dir[0] = ProjectionMatrix[0][3];
-    axis4Dir[1] = ProjectionMatrix[1][3];
-    axis4Dir[2] = ProjectionMatrix[2][3];
-    // rebuild table inputs so values update visually
-    for (let i = 0; i < ProjectionMatrix.length; i++) {
-        for (let j = 0; j < ProjectionMatrix[i].length; j++) {
-            const input = document.getElementById('inputProj'+i+j);
-            input.value = ProjectionMatrix[i][j];
-        }
-    }
-
-    if(surfacesTensor){
-        surfacesTensor.updateProjection();
-        surfacesTensor.updateScreen();
-    }
-}
