@@ -7,7 +7,7 @@ const FPS = 30;
 
 let font;
 let fontBold;
-let fontSize = 12;
+let fontSize = 10;
 let TextureImage;
 function preload() {
     font = loadFont(
@@ -470,7 +470,7 @@ const surfacesTensorPeriodicityStart = [3,1,2,2];
 
 const vertexToTextOffset = [-4,-4,0];
 
-let runAnimation = false;
+let runAnimation = true;
 let autoFocus = false;
 const projectAnimation = animation_TEMPLATE; // make up your own animation !
 let animationLastFrameCount = 0; // tracker for rendering animation at its own fps
