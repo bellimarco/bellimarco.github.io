@@ -89,15 +89,19 @@ const rotationControlsSpeed = 0.08;
 function updateKeyIsDown(){
     if (keyIsDown(65)){ // 'a'
         panX+=translationControlsSpeed;
+        centerX = panX;
     }
     else if(keyIsDown(68)){ // 'd'
         panX-=translationControlsSpeed;
+        centerX = panX;
     }
     if(keyIsDown(87)){ // 'w'
         panY+=translationControlsSpeed;
+        centerY = panY;
     }
     else if(keyIsDown(83)){ // 's'
         panY-=translationControlsSpeed;
+        centerY = panY;
     }
     if(keyIsDown(81)){ // 'q'
         panZ+=translationControlsSpeed;
@@ -504,6 +508,7 @@ function setup() {
 function draw() {
     background(255);
 
+    // translation commands also change centerX,centerY
     updateKeyIsDown();
 
     if(strollCentering) updateStrollCentering(0.5/FPS);
