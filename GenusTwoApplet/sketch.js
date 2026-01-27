@@ -120,14 +120,21 @@ function updateKeyIsDown(){
 }
 function keyPressed() {
     if (keyIsDown(67)) {
+        zoom = 1;
         rotX = 0;
         rotY = 0;
         rotZ = 0;
         panX = 0;
         panY = 0;
         panZ = 0;
-        zoom = 1;
-        if(surfacesTensor) centerToSurface(surfacesTensor);
+
+        if(surfacesTensor){
+            centerToSurface(surfacesTensor);
+            if(strollCentering){
+                panX = centerX;
+                panY = centerY;
+            }
+        }
     }
 }
 
@@ -203,6 +210,12 @@ function fitScaleToSurface(S){
     k*=2.0; // heuristic
     updateScale(k);
 }
+
+let centerX = 0;
+let centerY = 0;
+let strollCentering = true; // wether centerToSurface() should not directly affect panX,panY, but stroll to it smoothly
+let strollCenteringDamping = 0.05;
+
 function centerToSurface(S){
     let center;
     if(S instanceof Surface){
@@ -219,9 +232,14 @@ function centerToSurface(S){
         const c2 =  screenMap(projectionMap([surface2.Bounds.Re1center,surface2.Bounds.Im1center,surface2.Bounds.Re2center,surface2.Bounds.Im2center]));
         center = [0.5*(c1[0]+c2[0]), 0.5*(c1[1]+c2[1])];
     }
-    panX = -center[0];
-    panY = -center[1];
+    if(strollCentering){ centerX = -center[0]; centerY = -center[1]; }
+    else{ panX = -center[0]; panY = -center[1]; }
 }
+function updateStrollCentering(k = strollCenteringDamping){
+    panX += (centerX-panX)*k;
+    panY += (centerY-panY)*k;
+}
+
 function screenMap(Z){
     // Z vector in R^3
     // let P = [];
@@ -487,6 +505,8 @@ function draw() {
     background(255);
 
     updateKeyIsDown();
+
+    if(strollCentering) updateStrollCentering(0.5/FPS);
 
     // camera transforms
     translate(panX, panY, panZ);
