@@ -15,7 +15,7 @@ function preload() {
     );
     fontBold = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Bold.otf');
 
-    TextureImage = loadImage('/resources/Aguadeno.jpeg');
+    //TextureImage = loadImage('/resources/Aguadeno.png');
 }
 
 let lastMouseX, lastMouseY; //dragging variables
@@ -532,10 +532,10 @@ const colors = {
         Z1__: "#669c3520",
         Zk1__: "#38571a20",
         Inf__: "#6b1cfd10",
-        '++': "#aedf85C0",
-        '-+': "#78d12aC0",
-        '+-': "#59d5ffC0",
-        '--': "#4688fbC0",
+        '++': "#aedf85D0",
+        '-+': "#78d12aD0",
+        '+-': "#59d5ffD0",
+        '--': "#4688fbD0",
 };
 
 // array of pairs of vertex names, and vertex name of desired color
