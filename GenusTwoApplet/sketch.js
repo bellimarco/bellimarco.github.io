@@ -42,6 +42,21 @@ let panZ = 0;
 let rotX = 0; //camera rotation
 let rotY = 0;
 let rotZ = 0;
+
+function showFocus(){
+    push();
+    translate(0,0,0);
+    stroke(0,0,200);
+    strokeWeight(4);
+    line(0,0,0,16,0,0);
+    line(0,0,0,0,-16,0);
+    line(0,0,0,0,0,-16);
+    fill(255,0,100);
+    noStroke();
+    sphere(10);
+    pop();
+}
+
 function mouseDragged() {
     let dx = mouseX - lastMouseX;
     let dy = mouseY - lastMouseY;
@@ -69,22 +84,23 @@ function mouseDragged() {
             // PAN camera (move in camera plane)
             panX += dx;
             panY += dy;
+            centerX = panX;
+            centerY = panY;
         }
     }
     lastMouseX = mouseX;
     lastMouseY = mouseY;
 }
 
-let scaleCamera = 1; 
-let zoom = 1.0;
+let scaleCamera = 1.0;
 function CanvasMouseWheel(event) {
-    zoom *= (1 - event.deltaY * 0.001);
-    zoom = constrain(zoom, 0.2, 5);  // prevent inversion / disappearance
+    scaleCamera *= (1 - event.deltaY * 0.001);
+    scaleCamera = constrain(scaleCamera, 0.2, 5);  // prevent inversion / disappearance
     event.preventDefault(); // prevent page scroll
     return false; // prevent page scroll
 }
 
-const translationControlsSpeed = 8;
+const translationControlsSpeed = 10;
 const rotationControlsSpeed = 0.08;
 function updateKeyIsDown(){
     if (keyIsDown(65)){ // 'a'
@@ -105,24 +121,27 @@ function updateKeyIsDown(){
     }
     if(keyIsDown(81)){ // 'q'
         panZ+=translationControlsSpeed;
+        centerZ = -panZ;
     }
     else if(keyIsDown(69)){ // 'e'
-        panZ-=translationControlsSpeed;
+        panZ-=translationControlsSpeed
+        centerZ = panZ;
     }
     if(keyIsDown(89)){ // 'y'
-        rotY-=rotationControlsSpeed;
-    }
-    else if(keyIsDown(88)){ // 'x'
         rotY+=rotationControlsSpeed;
     }
+    else if(keyIsDown(88)){ // 'x'
+        rotY-=rotationControlsSpeed;
+    }
     if(keyIsDown(82)){ // 'r'
-        rotX+=rotationControlsSpeed;
+        rotX-=rotationControlsSpeed;
     }
     else if(keyIsDown(70)){ // 'f'
-        rotX-=rotationControlsSpeed;
+        rotX+=rotationControlsSpeed;
     }
 }
 function keyPressed() {
+
     if (keyIsDown(67)) {
         zoom = 1;
         rotX = 0;
@@ -137,6 +156,7 @@ function keyPressed() {
             if(strollCentering){
                 panX = centerX;
                 panY = centerY;
+                panZ = centerZ;
             }
         }
     }
@@ -211,14 +231,15 @@ function fitScaleToSurface(S){
     k = min(k, winWidth/(surface.Bounds.Re2breadth) );
     k = min(k, winHeight/(surface.Bounds.Im2breadth) );
     if(S instanceof SurfacesTensor) k/= math.max(...S.periodicityCounts);
-    k*=2.0; // heuristic
+    k*=1.5; // heuristic
     updateScale(k);
 }
 
 let centerX = 0;
 let centerY = 0;
+let centerZ = 0;
 let strollCentering = true; // wether centerToSurface() should not directly affect panX,panY, but stroll to it smoothly
-let strollCenteringDamping = 0.05;
+let strollCenteringDamping = 0.08;
 
 function centerToSurface(S){
     let center;
@@ -234,13 +255,14 @@ function centerToSurface(S){
         const surface2 = S.Surfaces[d2[0]][d2[1]][d2[2]][d2[3]];
         const c1 =  screenMap(projectionMap([surface1.Bounds.Re1center,surface1.Bounds.Im1center,surface1.Bounds.Re2center,surface1.Bounds.Im2center]));
         const c2 =  screenMap(projectionMap([surface2.Bounds.Re1center,surface2.Bounds.Im1center,surface2.Bounds.Re2center,surface2.Bounds.Im2center]));
-        center = [0.5*(c1[0]+c2[0]), 0.5*(c1[1]+c2[1])];
+        center = [0.5*(c1[0]+c2[0]), 0.5*(c1[1]+c2[1]), 0.5*(c1[2]+c2[2])];
     }
-    if(strollCentering){ centerX = -center[0]; centerY = -center[1]; }
-    else{ panX = -center[0]; panY = -center[1]; }
+    if(strollCentering){ centerX = -center[0]; centerY = -center[1]; centerZ = -center[2]; }
+    else{ panX = -center[0]; panY = -center[1]; panZ = -center[2]; }
 }
 function updateStrollCentering(k = strollCenteringDamping){
     panX += (centerX-panX)*k;
+    panY += (centerY-panY)*k;
     panY += (centerY-panY)*k;
 }
 
@@ -349,7 +371,7 @@ function STEP(delta,epsilon,t){
     else return epsilon;
 }
 const animation_TEMPLATE = {
-    fps: 30, //update rate of animation, indipendent of sketch
+    fps: 20, //update rate of animation, indipendent of sketch
     frameFrequency: 1, // canvas FPS divided by desired fps of animation
     precision: 4, // used in .toPrecision()
     period: 25, // time in seconds of a period of the cyclic animation
@@ -361,9 +383,9 @@ const animation_TEMPLATE = {
     draw: (t)=>{
         const project = animation_TEMPLATE;
 
-        let k = (-0.0 + OSCILLATOR(0.3,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
+        let k = (-0.0 + OSCILLATOR(0.3,1/project.period,t-project.t0)) * STEP(1,1,t-project.t0);
 
-        let x = (-0.2 + OSCILLATOR(0.5,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
+        let x = (-0.2 + OSCILLATOR(0.5,1/project.period,t-project.t0)) * STEP(1,1,t-project.t0);
         let y = (-0.2 + OSCILLATOR(0.5,1/project.period,t-project.t0+project.period/4)) *  STEP(1,1,t-project.t0);
 
         k1Slider.value = ( 0.5 + k ).toFixed(project.precision);
@@ -448,7 +470,7 @@ const surfacesTensorPeriodicityStart = [3,1,2,2];
 
 const vertexToTextOffset = [-4,-4,0];
 
-let runAnimation = true;
+let runAnimation = false;
 let autoFocus = false;
 const projectAnimation = animation_TEMPLATE; // make up your own animation !
 let animationLastFrameCount = 0; // tracker for rendering animation at its own fps
@@ -513,12 +535,17 @@ function draw() {
 
     if(strollCentering) updateStrollCentering(0.5/FPS);
 
+    // during rotation
+    if(dragging && keyIsDown(SHIFT)) showFocus();
+
     // camera transforms
-    translate(panX, panY, panZ);
-    scale(scaleCamera*zoom);
+    scale(scaleCamera);
     rotateX(rotX);
     rotateY(rotY);
     rotateZ(rotZ);
+    translate(panX, panY, panZ);
+
+
 
     if(showAxes && !runAnimation){ updateAxis4Gizmo(); }
     else if(runAnimation && ( animationLastFrameCount + projectAnimation.frameFrequency < frameCount )){
@@ -527,7 +554,7 @@ function draw() {
     }
 
     surfacesTensor.display();
-    surfacesTensor.displayEdges(scaleFactor*0.065);
+    surfacesTensor.displayEdges(scaleFactor*0.06);
     if(showLineMeshes) surfacesTensor.displayMesh(scaleFactor*0.05,showVertexLabels);
 
     if(showAxes){ drawAxes(true); }
@@ -599,6 +626,7 @@ class Surface {
     constructor(integrals,smoothing=0) {
         this.integrals = integrals;
         this.periodCounts = [0,0,0,0];
+        this.periodDisplacement = [math.complex(0,0),math.complex(0,0)];
 
         // wether to update uvVertices alongside the ScreenVertices, include them in the 3d shape generation, and use a given texture for rendering
         this.showTexture = false;
@@ -708,7 +736,7 @@ class Surface {
 
     buildVertices(){
         // reset period counts, as vertices are constructed anew at the origin
-        this.periodCounts = [0,0,0,0];
+        this.periodCounts = [0,0,0,0]; this.periodDisplacement=[math.complex(0,0),math.complex(0,0)];
 
         this.Vertices['++']['O'] = [math.complex(0, 0), math.complex(0, 0)];
         this.Vertices['++']['Z1'] = addVec(this.Vertices['++']['O'], this.integrals.A1);
@@ -867,11 +895,11 @@ class Surface {
     updateProjection(){
         for (const section in this.Vertices) {
             for (const vertex in this.Vertices[section]) {
-                this.ProjectedVertices[section][vertex] = projectionMap(this.Vertices[section][vertex]);
+                this.ProjectedVertices[section][vertex] = projectionMap(addVec(this.periodDisplacement, this.Vertices[section][vertex]));
             }
             if(this.showSmoothing){
                 for (const vertex in this.VerticesSmoothed[section]) {
-                    this.ProjectedVerticesSmoothed[section][vertex] = projectionMap(this.VerticesSmoothed[section][vertex]);
+                    this.ProjectedVerticesSmoothed[section][vertex] = projectionMap(addVec(this.periodDisplacement, this.VerticesSmoothed[section][vertex]));
                 }
             }
         }
@@ -888,7 +916,6 @@ class Surface {
                 }
             }
         }
-        if(this.showTexture) this.updateUV();
     }
 
     updateSmoothing(value){
@@ -1053,13 +1080,54 @@ class Surface {
         // this.updateScreen();
     }
 
-    updatePeriodCounts(counts){
+    updatePeriodCounts(counts, updateGraphics = false){
+        // this updates periodCounts, bounds, projectedVertices and screenVertices, not the actual Vertices array
+
         let relativeIncrease = [0,0,0,0];
         for(let i=0; i<this.periodCounts.length; i++){
             relativeIncrease[i] = counts[i]-this.periodCounts[i];
             this.periodCounts[i] = counts[i];
         }
-        this.translate(multVec(this.integrals.PeriodMatrix, relativeIncrease));
+        //this.translate(multVec(this.integrals.PeriodMatrix, relativeIncrease));
+        let v = multVec(this.integrals.PeriodMatrix, relativeIncrease);
+        this.periodDisplacement = addVec(v, this.periodDisplacement);
+        
+        for(const section in this.Vertices){
+            for(const vertex in this.Vertices[section]){
+                this.Bounds.Re1range[0] += v[0].re; this.Bounds.Re1range[1] += v[0].re;
+                this.Bounds.Im1range[0] += v[0].im; this.Bounds.Im1range[1] += v[0].im;
+                this.Bounds.Re2range[0] += v[1].re; this.Bounds.Re2range[1] += v[1].re;
+                this.Bounds.Im2range[0] += v[1].im; this.Bounds.Im2range[1] += v[1].im;
+            }
+        }
+        this.Bounds.Re1center += v[0].re; this.Bounds.Re2center += v[1].re;
+        this.Bounds.Im1center += v[0].im; this.Bounds.Im2center += v[1].im;
+
+        if(updateGraphics){
+            // updateProjection and updateScreen can be done more efficiently by directly translating
+            v = projectionMap(v);
+            for (const section in this.ProjectedVertices) {
+                for (const vertex in this.ProjectedVertices[section]) {
+                    this.ProjectedVertices[section][vertex] = addVec(v, this.ProjectedVertices[section][vertex]);
+                }
+                if(this.showSmoothing){
+                    for (const vertex in this.ProjectedVerticesSmoothed[section]) {
+                        this.ProjectedVerticesSmoothed[section][vertex] = addVec(v, this.ProjectedVerticesSmoothed[section][vertex]);
+                    }
+                }
+            }
+            v = screenMap(v);
+            for (const section in this.ScreenVertices) {
+                for (const vertex in this.ScreenVertices[section]) {
+                    this.ScreenVertices[section][vertex] = addVec(v, this.ScreenVertices[section][vertex]);
+                }
+                if(this.showSmoothing){
+                    for (const vertex in this.ScreenVerticesSmoothed[section]) {
+                        this.ScreenVerticesSmoothed[section][vertex] = addVec(v, this.ScreenVerticesSmoothed[section][vertex]);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1155,8 +1223,8 @@ class SurfacesTensor {
 
     updateModuli(k1,k2,display=false){
         this.integrals.updateModuli(k1,k2,display);
-         // throw away old surfaces which might have different moduli, so that if new are created they will have updated moduli
-        this.reduce();
+        // throw away old surfaces which might have different moduli, so that if new are created they will have updated moduli
+        //this.reduce(); // already called in updatePeriodCounts
         this.iterate((surface)=>{
             // this rebuilds vertices, resets period counts of the surfaces, then updates bounds and UVVertices if showTexture
             surface.buildVertices();
@@ -1183,11 +1251,10 @@ class SurfacesTensor {
         });
     }
 
-    translate(v){
-
-    }
-
     updatePeriodCounts(counts, updateGraphics=false){
+         // if periods change, old surfaces in the tensor might be out of place
+        this.reduce();
+
         this.periodCounts = [counts[0],counts[1],counts[2],counts[3]];
         for(let i1=0; i1<this.periodicityCounts[0]; i1++){
             for(let i2=0; i2<this.periodicityCounts[1]; i2++){
