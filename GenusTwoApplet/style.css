@@ -37,7 +37,7 @@ button {
 #period-frame{
     display: inline-flex;
     padding: 5px;
-    margin: 10px;
+    margin: 5px;
     border: 1px solid #ddd;
     background: #fafafa;
 }
@@ -154,7 +154,7 @@ button {
 #projection-frame{
     display: inline-flex;
     padding: 5px;
-    margin: 10px;
+    margin: 5px;
     border: 1px solid #ddd;
     background: #fafafa;
 }
@@ -171,9 +171,8 @@ button {
     align-items: center;
 }
 #controls-view button {
-  width: 10em;
-  height: 2em;
-  margin-top: 5px 0;
+    padding: 5px;
+    margin-top: 5px 0;
 }
 #projectionMatrix {
     margin: 5px;
@@ -189,8 +188,7 @@ button {
     align-items: center;
 }
 #projectionMatrix button {
-  width: 8em;
-  height: 2.5em;
+    padding: 5px;
 }
 #controls-hint {
     

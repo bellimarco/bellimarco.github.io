@@ -1,183 +1,201 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="en">
-<head>
+
     <meta charset="utf-8" />
+
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" type="image/png" href="/resources/logo.png"/>
+    <link rel="mask-icon" href="https://bellimarco.github.io/resources/logo.png?v=M44lzPylqQ" color="#000000">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+
     <script> window.MathJax = { tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']] } }; </script>
+
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async> </script>
     <script src="hyperellipticIntegrators.js"></script>
     <script src="addScreenPositionFunction.js"></script>
     <script src="sketch.js"></script>
-    
-    <title>Genus 2 Surface Applet</title>
-</head>
-<body>
-    <h1 style="margin:20px">Myself embedded in the Jacobian of a genus two curve, for varying moduli.</h1>
 
-    <div id="canvas-frame">
-        <div id="canvas-container"></div>
+    <head>    
+        <title>Genus 2 Surface Applet</title>
+    </head>
+    <body>
+        <h1 style="margin:20px">Genus Two Curves.</h1>
 
-        <div id="period-frame">
-            <div>
-                <h4>Moduli of Legendre Normal Form</h4>
-                <div id="hyperelliptic-section">
-                    <div></div>
-                    <div id="slider-row">
-                        <div class="slider-frame">
-                            $0<\kappa_2<\kappa_1$
-                            <input type="range" id="k2Slider" min="0.09" max="0.9" step="0.001" value="0.5" class="slider-input">
-                            <div id="k2Value" style="margin-top:2px;">0.5</div>
-                        </div>
-                        <div class="slider-frame">
-                            $0<\kappa_1< 1$
-                            <input type="range" id="k1Slider" min="0.15" max="0.97" step="0.001" value="0.707" class="slider-input">
-                            <div id="k1Value" style="margin-top:2px;">0.7</div>
-                        </div>
-                    </div>
-                    <div class="differentials">
-                        $\omega_1 = \frac{dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
-                    </div>
-                    <div class="differentials">
-                        $\omega_2 = \frac{x\cdot dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
-                    </div>
-                </div>
-            </div>
-            <div>
+        <div id="canvas-frame">
+            <div style="display: flex;">
+                <div id="canvas-container"></div>
                 <div>
-                    <h4 style="display:block;">Period Matrix  &nbsp;$(\int_{\alpha_j}\omega_i)_{ij}$</h4>
-                </div>
-                <div id="period-matrix">
-                    <div class="period-grid">
-                        <div class="period-cell" id="I11">I₁₁</div>
-                        <div class="period-cell" id="I12">I₁₂</div>
-                        <div class="period-cell" id="I13">I₁₃</div>
-                        <div class="period-cell" id="I14">I₁₄</div>
-                        <div class="period-cell" id="I21">I₂₁</div>
-                        <div class="period-cell" id="I22">I₂₂</div>
-                        <div class="period-cell" id="I23">I₂₃</div>
-                        <div class="period-cell" id="I24">I₂₄</div>
+                    <div id="controls-view">
+                        <button onclick="toggleAnimation()" style="display:block">Toggle animation</button>
+                        <button onclick="toggleAutofocus()" style="display:block">Toggle auto focus</button>
+                        <button onclick="toggleLineMesh()" style="display:block">Toggle line mesh</button>
+                        <button onclick="toggleVertexLabels()" style="display:block">Toggle vertex labels</button>
+                        <button onclick="toggleAxes()" style="display:block">Toggle axes</button>
+                    </div>
+                    <div id="controls-hint">
+                        <div class="key-row">
+                            <div class="key">
+                                <img src="mouse_icon.png" alt="mouse_icon" height="30em">
+                            </div>
+                            <div class="key" style="border:0; background:0;box-shadow:0 0 0; width:20px"></div>
+                            <div class="key" style="width:60px">
+                                &#8679; + &nbsp;
+                                <img src="mouse_icon.png" alt="mouse_icon" height="30em">
+                            </div>
+                        </div>
+                        <div class="controls-caption" style="margin: 3px; margin-bottom:6px;">
+                                Translation &nbsp;&nbsp;&nbsp;&nbsp;
+                                Rotation
+                        </div>
+                        <div class="key-row">
+                            <div class="key">Q</div>
+                            <div class="key">W</div>
+                            <div class="key">E</div>
+                            <div class="key">R</div>
+                        </div>
+                        <div class="key-row">
+                            <div class="key">A</div>
+                            <div class="key">S</div>
+                            <div class="key">D</div>
+                            <div class="key">F</div>
+                        </div>
+                        <div class="key-row">
+                            <div class="key">Y</div>
+                            <div class="key">X</div>
+                            <div class="key">C</div>
+                        </div>
+                        <div class="controls-caption">
+                            Translation (A,D,W,S,Q,E) <br>
+                            Rotation (R,F,Y,X) <br>
+                            Center (C)
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div>
-                 <div style="margin: 10px;">
-                    <div style="margin:5px; margin-top:15px;"> Displayed Periodicity </div>
-                    <div class="period-controls">
-                        <div class="period-column">
-                            <button onclick="periodicityPlus(0)">+</button>
-                            <div class="period-counter" id="periodicityCount0">1</div>
-                            <button onclick="periodicityMinus(0)">−</button>
+            <div id="period-frame">
+                <div>
+                    <h4>Moduli of Legendre Normal Form</h4>
+                    <div id="hyperelliptic-section">
+                        <div></div>
+                        <div id="slider-row">
+                            <div class="slider-frame">
+                                $0<\kappa_2<\kappa_1$
+                                <input type="range" id="k2Slider" min="0.09" max="0.9" step="0.001" value="0.5" class="slider-input">
+                                <div id="k2Value" style="margin-top:2px;">0.5</div>
+                            </div>
+                            <div class="slider-frame">
+                                $0<\kappa_1< 1$
+                                <input type="range" id="k1Slider" min="0.15" max="0.97" step="0.001" value="0.707" class="slider-input">
+                                <div id="k1Value" style="margin-top:2px;">0.7</div>
+                            </div>
                         </div>
-                        <div class="period-column">
-                            <button onclick="periodicityPlus(1)">+</button>
-                            <div class="period-counter" id="periodicityCount1">1</div>
-                            <button onclick="periodicityMinus(1)">−</button>
+                        <div class="differentials">
+                            $\omega_1 = \frac{dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
                         </div>
-                        <div class="period-column">
-                            <button onclick="periodicityPlus(2)">+</button>
-                            <div class="period-counter" id="periodicityCount2">1</div>
-                            <button onclick="periodicityMinus(2)">−</button>
-                        </div>
-                        <div class="period-column">
-                            <button onclick="periodicityPlus(3)">+</button>
-                            <div class="period-counter" id="periodicityCount3">1</div>
-                            <button onclick="periodicityMinus(3)">−</button>
-                        </div>
-                    </div>
-                </div>
-                <div style="margin: 10px;">
-                    <div style="margin:5px; margin-top:15px;"> Period Translation </div>
-                    <div class="period-controls">
-                        <div class="period-column">
-                            <button onclick="periodPlus(0)">+</button>
-                            <div class="period-counter" id="periodCount0">0</div>
-                            <button onclick="periodMinus(0)">−</button>
-                        </div>
-                        <div class="period-column">
-                            <button onclick="periodPlus(1)">+</button>
-                            <div class="period-counter" id="periodCount1">0</div>
-                            <button onclick="periodMinus(1)">−</button>
-                        </div>
-                        <div class="period-column">
-                            <button onclick="periodPlus(2)">+</button>
-                            <div class="period-counter" id="periodCount2">0</div>
-                            <button onclick="periodMinus(2)">−</button>
-                        </div>
-                        <div class="period-column">
-                            <button onclick="periodPlus(3)">+</button>
-                            <div class="period-counter" id="periodCount3">0</div>
-                            <button onclick="periodMinus(3)">−</button>
+                        <div class="differentials">
+                            $\omega_2 = \frac{x\cdot dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
                         </div>
                     </div>
                 </div>
+                <div>
+                    <div>
+                        <h4 style="display:block;">Period Matrix  &nbsp;$(\int_{\alpha_j}\omega_i)_{ij}$</h4>
+                    </div>
+                    <div id="period-matrix">
+                        <div class="period-grid">
+                            <div class="period-cell" id="I11">I₁₁</div>
+                            <div class="period-cell" id="I12">I₁₂</div>
+                            <div class="period-cell" id="I13">I₁₃</div>
+                            <div class="period-cell" id="I14">I₁₄</div>
+                            <div class="period-cell" id="I21">I₂₁</div>
+                            <div class="period-cell" id="I22">I₂₂</div>
+                            <div class="period-cell" id="I23">I₂₃</div>
+                            <div class="period-cell" id="I24">I₂₄</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="margin: 10px;">
+                        <div style="margin:5px; margin-top:15px;"> Displayed Periodicity </div>
+                        <div class="period-controls">
+                            <div class="period-column">
+                                <button onclick="periodicityPlus(0)">+</button>
+                                <div class="period-counter" id="periodicityCount0">1</div>
+                                <button onclick="periodicityMinus(0)">−</button>
+                            </div>
+                            <div class="period-column">
+                                <button onclick="periodicityPlus(1)">+</button>
+                                <div class="period-counter" id="periodicityCount1">1</div>
+                                <button onclick="periodicityMinus(1)">−</button>
+                            </div>
+                            <div class="period-column">
+                                <button onclick="periodicityPlus(2)">+</button>
+                                <div class="period-counter" id="periodicityCount2">1</div>
+                                <button onclick="periodicityMinus(2)">−</button>
+                            </div>
+                            <div class="period-column">
+                                <button onclick="periodicityPlus(3)">+</button>
+                                <div class="period-counter" id="periodicityCount3">1</div>
+                                <button onclick="periodicityMinus(3)">−</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin: 10px;">
+                        <div style="margin:5px; margin-top:15px;"> Period Translation </div>
+                        <div class="period-controls">
+                            <div class="period-column">
+                                <button onclick="periodPlus(0)">+</button>
+                                <div class="period-counter" id="periodCount0">0</div>
+                                <button onclick="periodMinus(0)">−</button>
+                            </div>
+                            <div class="period-column">
+                                <button onclick="periodPlus(1)">+</button>
+                                <div class="period-counter" id="periodCount1">0</div>
+                                <button onclick="periodMinus(1)">−</button>
+                            </div>
+                            <div class="period-column">
+                                <button onclick="periodPlus(2)">+</button>
+                                <div class="period-counter" id="periodCount2">0</div>
+                                <button onclick="periodMinus(2)">−</button>
+                            </div>
+                            <div class="period-column">
+                                <button onclick="periodPlus(3)">+</button>
+                                <div class="period-counter" id="periodCount3">0</div>
+                                <button onclick="periodMinus(3)">−</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="projection-frame">
+            
+                <div id="projectionMatrix">
+                    <h4>Projection Matrix &nbsp; $\mathbb{C}^2 \stackrel{\small (\textbf{Re}_1,\textbf{Im}_1,\textbf{Re}_2,\textbf{Im}_2)}{\longrightarrow} \mathbb{R}^4 \rightarrow \mathbb{R}^3$</h4>
+                    <div id="projectionMatrixTemplates">
+                        <button id="projMixed">Mixed</button>
+                        <button id="projC1">$\mathbb{C}^2 \rightarrow \mathbb{C}\times\{0\}$</button>
+                        <button id="projC2">$\mathbb{C}^2 \rightarrow \{0\}\times\mathbb{C}$</button>
+                    </div>
+                    
+                    <table id="projectionMatrixTable" style="margin:5px;"></table>
+                </div>
+
             </div>
         </div>
 
-        <div id="projection-frame">
-            <div id="controls-view">
-                <button onclick="toggleAnimation()" style="display:block">Toggle animation</button>
-                <button onclick="toggleLineMesh()" style="display:block">Toggle line mesh</button>
-                <button onclick="toggleVertexLabels()" style="display:block">Toggle vertex labels</button>
-                <button onclick="toggleAxes()" style="display:block">Toggle axes</button>
-            </div>
-            <div id="projectionMatrix">
-                <h4>Projection Matrix &nbsp; $\mathbb{C}^2 \stackrel{\small (\textbf{Re}_1,\textbf{Im}_1,\textbf{Re}_2,\textbf{Im}_2)}{\longrightarrow} \mathbb{R}^4 \rightarrow \mathbb{R}^3$</h4>
-                <div id="projectionMatrixTemplates">
-                    <button id="projMixed">Mixed</button>
-                    <button id="projC1">$\mathbb{C}^2 \rightarrow \mathbb{C}\times\{0\}$</button>
-                    <button id="projC2">$\mathbb{C}^2 \rightarrow \{0\}\times\mathbb{C}$</button>
-                </div>
-                
-                <table id="projectionMatrixTable" style="margin:5px;"></table>
-            </div>
-            <div id="controls-hint">
-                <div class="key-row">
-                    <div class="key">
-                        <img src="mouse_icon.png" alt="mouse_icon" height="30em">
-                    </div>
-                    <div class="key" style="border:0; background:0;box-shadow:0 0 0; width:20px"></div>
-                    <div class="key" style="width:60px">
-                        &#8679; + &nbsp;
-                        <img src="mouse_icon.png" alt="mouse_icon" height="30em">
-                    </div>
-                </div>
-                <div class="controls-caption" style="margin: 3px; margin-bottom:6px;">
-                        Translation &nbsp;&nbsp;&nbsp;&nbsp;
-                        Rotation
-                </div>
-                <div class="key-row">
-                    <div class="key">Q</div>
-                    <div class="key">W</div>
-                    <div class="key">E</div>
-                    <div class="key">R</div>
-                </div>
-                <div class="key-row">
-                    <div class="key">A</div>
-                    <div class="key">S</div>
-                    <div class="key">D</div>
-                    <div class="key">F</div>
-                </div>
-                <div class="key-row">
-                    <div class="key">Y</div>
-                    <div class="key">X</div>
-                    <div class="key">C</div>
-                </div>
-                <div class="controls-caption">
-                    Translation (A,D,W,S,Q,E) <br>
-                    Rotation (R,F,Y,X) <br>
-                    Center (C)
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-</body>
+        <br>
+        <hr>
+        <address>Marco Belli. Last update: January 27th, 2025<br>
+        </address>
+        <br>
+        <br>
+    </body>
 </html>

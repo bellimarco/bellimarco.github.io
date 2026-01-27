@@ -3,7 +3,7 @@
 let canvas;
 let winWidth; // in setup function
 let winHeight;
-const FPS = 30;
+const FPS = 20;
 
 let font;
 let fontBold;
@@ -144,6 +144,40 @@ function keyPressed() {
 
 // ============ Coordinate mappings ======================================
 
+// complex 2-vector operations
+function addVec(v,w){
+    return [math.add(v[0],w[0]), math.add(v[1],w[1])];
+}
+function subVec(v,w){
+    return [math.add(v[0],math.multiply(-1,w[0])), math.add(v[1],math.multiply(-1,w[1]))];
+}
+function scaleVec(k,v){
+    return [k*v[0],k*v[1],k*v[2]];
+}
+function multVec(M, v) {
+    if (M.length === 0) return [];
+
+    const rows = M.length;
+    const cols = M[0].length;
+
+    if (v.length !== cols) {
+        throw new Error("Matrix/vector size mismatch");
+    }
+
+    let result = new Array(rows);
+
+    for (let i = 0; i < rows; i++) {
+        let sum = 0;
+        for (let j = 0; j < cols; j++) {
+            sum = math.add(sum, math.multiply(M[i][j], v[j]));
+        }
+        result[i] = sum;
+    }
+
+    return result;
+}
+
+
 // mapping from Euclidean R^3 to screen pixel coordinates
 let scaleFactor=40; // pixels per unit length
 let ScreenMatrix = [
@@ -200,9 +234,6 @@ function screenMap(Z){
     }
     return P;
 }
-
-
-
 
 // Unit vector in R^3 giving direction of 4th axis
 let axis4Dir = [0,0.2,0.5];
@@ -275,47 +306,100 @@ function projectionMap(z){
 
 
 
-const MatMinusId = [
-    [-1, 0],
-    [0, -1],
-];
-const MatFlip2 = [
-    [1, 0],
-    [0, -1],
-];
 
-// complex 2-vector addition
-function addVec(v,w){
-    return [math.add(v[0],w[0]), math.add(v[1],w[1])];
-}
-function subVec(v,w){
-    return [math.add(v[0],math.multiply(-1,w[0])), math.add(v[1],math.multiply(-1,w[1]))];
-}
-function scaleVec(k,v){
-    return [k*v[0],k*v[1],k*v[2]];
-}
-function multVec(M, v) {
-    if (M.length === 0) return [];
 
-    const rows = M.length;
-    const cols = M[0].length;
 
-    if (v.length !== cols) {
-        throw new Error("Matrix/vector size mismatch");
+
+
+// ============= ANIMATION =============================
+
+
+// oscillates between 0 and mag
+function OSCILLATOR(mag,freq,t){
+    return mag*0.5*(1+math.sin(freq*t*6.28)).toPrecision(3);
+}
+function STEP(delta,epsilon,t){
+    if(t<0) return 0;
+    else if(0<=t && t<delta) return t/delta*epsilon;
+    else return epsilon;
+}
+
+const animation_TEMPLATE = {
+    precision: 3, // used in .toPrecision()
+    period: 25, // time in seconds of a period of the cyclic animation
+    t0: 0, // start time
+    setup:  ()=>{
+
+    },
+    // input time in seconds
+    draw: (t)=>{
+        const project = animation_TEMPLATE;
+
+        let k = (-0.0 + OSCILLATOR(0.2,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
+
+        let x = (-0.3 + OSCILLATOR(0.6,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
+        let y = (-0.3 + OSCILLATOR(0.6,1/project.period,t-project.t0+project.period/4)) *  STEP(1,1,t-project.t0);
+
+        k1Slider.value = ( 0.2 + k ).toFixed(project.precision);
+        k2Slider.value = (0.15 + OSCILLATOR(k*0.95,2/project.period,t-project.t0) ).toFixed(project.precision);
+
+        updateModuli();
+
+        let M = [
+            [1, 0, 0, x.toPrecision(project.precision)],
+            [0, 1, 0, y.toPrecision(project.precision)],
+            [0, 0, 1, 0.5],
+        ]
+        updateProjectionMatrix(M);
+
+        if(autoFocus || t<5) centerToSurface(surfacesTensor);
     }
-
-    let result = new Array(rows);
-
-    for (let i = 0; i < rows; i++) {
-        let sum = 0;
-        for (let j = 0; j < cols; j++) {
-            sum = math.add(sum, math.multiply(M[i][j], v[j]));
-        }
-        result[i] = sum;
-    }
-
-    return result;
 }
+
+const animation_MYSELF = {
+    precision: 3,
+    period: 10,
+    t0: 5,
+    t1: 15,
+    t2: 17.5,
+    OLDSCALE: 1,
+    OLDPANY: 1,
+    setup: ()=>{
+        updateScale(scaleFactor*2); //============================================
+        animation_MYSELF.OLDSCALE = scaleFactor;
+        
+        animation_MYSELF.draw(0); // set state at time 0
+        centerToSurface(surfacesTensor);
+        animation_MYSELF.OLDPANY = panY;
+    },
+    // input time in seconds
+    draw: (t)=>{
+        const project = animation_MYSELF;
+
+        let x = (-0.4+OSCILLATOR(0.8,1/project.period,t-project.t0)) *  STEP(3,1,t-project.t0-1);
+        let y = (-0.4+OSCILLATOR(0.8,1/project.period,t-project.t0+project.period/4)) *  STEP(3,1,t-project.t0-1);
+        let z = (0.01+OSCILLATOR(0.8,1/project.period,t-project.t0)) *  STEP(3,1,t-project.t0-1);
+        let w = (0.01+OSCILLATOR(0.4,1/project.period,t-project.t0)) *  STEP(3,1,t-project.t0-1);
+        //x=y=z=w=0;
+        let M = [
+            [1, 0, 0, x.toPrecision(project.precision)],
+            [0, 2.5, 0, y.toPrecision(project.precision)],
+            [z.toPrecision(project.precision), 0, -w.toPrecision(project.precision), z.toPrecision(project.precision)],
+        ]
+        updateProjectionMatrix(M);
+
+        scaleFactor = project.OLDSCALE-STEP(project.period/2,3,t-project.t1)-STEP(project.period/2,3,t-project.t0);
+        rotX = -STEP(project.period/2,0.42,t-project.t2);
+        
+        updateScale(scaleFactor);
+        centerToSurface(surfacesTensor);
+
+        panY = project.OLDPANY+STEP(project.period/2,50,t-project.t2);
+    }
+};
+
+
+
 
 
 
@@ -338,8 +422,11 @@ const surfacesTensorPeriodicityStart = [3,1,3,2];
 
 const vertexToTextOffset = [-4,-4,0];
 
-let projectAnimation = true;
-let showAxes = false;
+let runAnimation = true;
+let autoFocus = false;
+const projectAnimation = animation_TEMPLATE;
+
+let showAxes = true;
 let showVertexLabels = false;
 let showLineMeshes = false;
 let smoothingLevel = 2;
@@ -386,15 +473,10 @@ function setup() {
     for(let i=0; i<4; i++){ updatePeriodCounter(i); updatePeriodicityCounter(i); }
     
 
-    surfacesTensor.updateTexture(true, TextureImage);
+    // surfacesTensor.updateTexture(true, TextureImage);
 
-    if(projectAnimation){
-        updateScale(scaleFactor*2); //============================================
-        OLDSCALE = scaleFactor;
-        
-        projectAnimate(0); // set state at time 0
-        centerToSurface(surfacesTensor);
-        OLDPANY = panY;
+    if(runAnimation){
+        projectAnimation.setup();
     }
 }
 
@@ -410,60 +492,15 @@ function draw() {
     rotateY(rotY);
     rotateZ(rotZ);
 
-    if(showAxes && !projectAnimation){ updateAxis4Gizmo(); }
-    else if(projectAnimation) projectAnimate(frameCount/FPS);
+    if(showAxes && !runAnimation){ updateAxis4Gizmo(); }
+    else if(runAnimation) projectAnimation.draw(frameCount/FPS);
 
     surfacesTensor.display();
+    surfacesTensor.displayEdges(scaleFactor*0.065);
     if(showLineMeshes) surfacesTensor.displayMesh(scaleFactor*0.05,showVertexLabels);
 
     if(showAxes){ drawAxes(true); }
 }
-
-
-// ============= ANIMATION =============================
-let PRECI = 3;
-let OLDSCALE = 1;
-let OLDPANY = 1;
-let PER = 10;
-let T0 = PER/2;
-let T1 = PER+PER/2;
-let T2 = T1+PER/4;
-function OSCILLATOR(mag,freq,t){
-    return mag*0.5*(1+math.sin(freq*t*6.28)).toPrecision(3);
-}
-function STEP(delta,epsilon,t){
-    if(t<0) return 0;
-    else if(0<=t && t<delta) return t/delta*epsilon;
-    else return epsilon;
-}
-
-function projectAnimate(t){
-
-    let x = (-0.4+OSCILLATOR(0.8,1/PER,t-T0)) *  STEP(3,1,t-T0-1);
-    let y = (-0.4+OSCILLATOR(0.8,1/PER,t-T0+PER/4)) *  STEP(3,1,t-T0-1);
-    let z = (0.01+OSCILLATOR(0.8,1/PER,t-T0)) *  STEP(3,1,t-T0-1);
-    let w = (0.01+OSCILLATOR(0.4,1/PER,t-T0)) *  STEP(3,1,t-T0-1);
-    //x=y=z=w=0;
-    let M = [
-        [1, 0, 0, x.toPrecision(PRECI)],
-        [0, 2.5, 0, y.toPrecision(PRECI)],
-        [z.toPrecision(PRECI), 0, -w.toPrecision(PRECI), z.toPrecision(PRECI)],
-    ]
-    updateProjectionMatrix(M);
-
-    scaleFactor = OLDSCALE-STEP(PER/2,3,t-T1)-STEP(PER/2,3,t-T0);
-    rotX = -STEP(PER/2,0.42,t-T2);
-    
-    updateScale(scaleFactor);
-    centerToSurface(surfacesTensor);
-
-    panY = OLDPANY+STEP(PER/2,50,t-T2);
-}
-
-
-
-
-
 
 
 
@@ -492,10 +529,10 @@ const colors = {
         Z1__: "#669c3520",
         Zk1__: "#38571a20",
         Inf__: "#6b1cfd10",
-        '++': "#aedf8590",
-        '-+': "#78d12a90",
-        '+-': "#59d5ff90",
-        '--': "#4688fb90",
+        '++': "#aedf85C0",
+        '-+': "#78d12aC0",
+        '+-': "#59d5ffC0",
+        '--': "#4688fbC0",
 };
 
 // array of pairs of vertex names, and vertex name of desired color
@@ -860,20 +897,47 @@ class Surface {
         }
     }
 
-    displayEdges(size){
+    displayMesh(size){
         if(this.showSmoothing){
             for (const section in this.ScreenVertices){
                 for (const [a, b, col] of sectionLineMeshSmoothing[this.smoothing]) {
-                    displayEdge(
-                        (this.ScreenVertices[section][a]?this.ScreenVertices[section][a]:this.ScreenVerticesSmoothed[section][a]),
-                        (this.ScreenVertices[section][b]?this.ScreenVertices[section][b]:this.ScreenVerticesSmoothed[section][b]),
-                        size, colors[col]);
+                    if(col=='Inf__'){
+                        displayEdge(
+                            (this.ScreenVertices[section][a]?this.ScreenVertices[section][a]:this.ScreenVerticesSmoothed[section][a]),
+                            (this.ScreenVertices[section][b]?this.ScreenVertices[section][b]:this.ScreenVerticesSmoothed[section][b]),
+                            size, colors[col]);
+                    }
                 }
             }
         }else{
             for (const section in this.ScreenVertices){
                 for (const [a, b, col] of sectionLineMesh) {
-                    displayEdge(this.ScreenVertices[section][a], this.ScreenVertices[section][b], size, colors[col]);
+                    if(col=='Inf__'){
+                        displayEdge(this.ScreenVertices[section][a], this.ScreenVertices[section][b], size, colors[col]);
+                    }
+                }
+            }
+        } 
+    }
+
+    displayEdges(size){
+        if(this.showSmoothing){
+            for (const section in this.ScreenVertices){
+                for (const [a, b, col] of sectionLineMeshSmoothing[this.smoothing]) {
+                    if(col!='Inf__'){
+                        displayEdge(
+                            (this.ScreenVertices[section][a]?this.ScreenVertices[section][a]:this.ScreenVerticesSmoothed[section][a]),
+                            (this.ScreenVertices[section][b]?this.ScreenVertices[section][b]:this.ScreenVerticesSmoothed[section][b]),
+                            size, colors[col]);
+                    }
+                }
+            }
+        }else{
+            for (const section in this.ScreenVertices){
+                for (const [a, b, col] of sectionLineMesh) {
+                    if(col!='Inf__'){
+                        displayEdge(this.ScreenVertices[section][a], this.ScreenVertices[section][b], size, colors[col]);
+                    }
                 }
             }
         } 
@@ -1075,9 +1139,15 @@ class SurfacesTensor {
         });
     }
 
-    displayMesh(size,showVertexLabels){
+    displayEdges(size){
         this.iterate((surface)=>{
             surface.displayEdges(size);
+        });
+    }
+
+    displayMesh(size,showVertexLabels){
+        this.iterate((surface)=>{
+            surface.displayMesh(size);
             surface.displayVertices(size,showVertexLabels);
         });
     }
@@ -1306,18 +1376,23 @@ function updatePeriodicityCounter(i) {
 
 // =========    PROJECTION  ==========
 
-function toggleVertexLabels() {
-    showVertexLabels = !showVertexLabels;
-}
 function toggleAxes() {
     showAxes = !showAxes;
 }
 function toggleAnimation() {
-    projectAnimation = !projectAnimation;
+    runAnimation = !runAnimation;
+}
+function toggleAutofocus() {
+    autoFocus = !autoFocus;
 }
 function toggleLineMesh() {
     showLineMeshes = !showLineMeshes;
 }
+function toggleVertexLabels() {
+    showVertexLabels = !showVertexLabels;
+    if(!showLineMeshes) toggleLineMesh();
+}
+
 
 function buildProjectionMatrixTable() {
     const table = document.getElementById('projectionMatrixTable');
