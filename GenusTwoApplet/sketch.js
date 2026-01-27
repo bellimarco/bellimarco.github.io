@@ -224,15 +224,18 @@ function centerToSurface(S){
 }
 function screenMap(Z){
     // Z vector in R^3
-    let P = [];
-    for (let i=0; i<3; i++){
-        let sum = 0;
-        for (let j=0; j<3; j++){
-            sum = math.add(sum, math.multiply(ScreenMatrix[i][j], Z[j]));
-        }
-        P.push(sum);
-    }
-    return P;
+    // let P = [];
+    // for (let i=0; i<3; i++){
+    //     let sum = 0;
+    //     for (let j=0; j<3; j++){
+    //         sum = math.add(sum, math.multiply(ScreenMatrix[i][j], Z[j]));
+    //     }
+    //     P.push(sum);
+    // }
+    // return P;
+
+    //assuming ScreenMatrix is diagonal
+    return [Z[0]*ScreenMatrix[0][0],Z[1]*ScreenMatrix[1][1], Z[2]*ScreenMatrix[2][2]];
 }
 
 // Unit vector in R^3 giving direction of 4th axis
