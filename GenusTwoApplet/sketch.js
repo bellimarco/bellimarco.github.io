@@ -3,7 +3,7 @@
 let canvas;
 let winWidth; // in setup function
 let winHeight;
-const FPS = 20;
+const FPS = 30;
 
 let font;
 let fontBold;
@@ -326,13 +326,14 @@ function STEP(delta,epsilon,t){
     else if(0<=t && t<delta) return t/delta*epsilon;
     else return epsilon;
 }
-
 const animation_TEMPLATE = {
+    fps: 25, //update rate of animation, indipendent of sketch
+    frameFrequency: 1, // canvas FPS divided by desired fps of animation
     precision: 3, // used in .toPrecision()
     period: 25, // time in seconds of a period of the cyclic animation
     t0: 0, // start time
     setup:  ()=>{
-
+        animation_TEMPLATE.frameFrequency = FPS/animation_TEMPLATE.fps;
     },
     // input time in seconds
     draw: (t)=>{
@@ -355,7 +356,7 @@ const animation_TEMPLATE = {
         ]
         updateProjectionMatrix(M);
 
-        if(autoFocus || t<5) centerToSurface(surfacesTensor);
+        if(autoFocus || t<3.5) centerToSurface(surfacesTensor);
     }
 }
 
@@ -427,7 +428,8 @@ const vertexToTextOffset = [-4,-4,0];
 
 let runAnimation = true;
 let autoFocus = false;
-const projectAnimation = animation_TEMPLATE;
+const projectAnimation = animation_TEMPLATE; // make up your own animation !
+let animationLastFrameCount = 0; // tracker for rendering animation at its own fps
 
 let showAxes = true;
 let showVertexLabels = false;
@@ -478,9 +480,7 @@ function setup() {
 
     // surfacesTensor.updateTexture(true, TextureImage);
 
-    if(runAnimation){
-        projectAnimation.setup();
-    }
+    if(runAnimation) projectAnimation.setup();
 }
 
 function draw() {
@@ -496,7 +496,10 @@ function draw() {
     rotateZ(rotZ);
 
     if(showAxes && !runAnimation){ updateAxis4Gizmo(); }
-    else if(runAnimation) projectAnimation.draw(frameCount/FPS);
+    else if(runAnimation && ( animationLastFrameCount + projectAnimation.frameFrequency < frameCount )){
+        animationLastFrameCount = frameCount;
+        projectAnimation.draw(frameCount/FPS);
+    }
 
     surfacesTensor.display();
     surfacesTensor.displayEdges(scaleFactor*0.065);
