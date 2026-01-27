@@ -200,7 +200,7 @@ function fitScaleToSurface(S){
     k = min(k, winWidth/(surface.Bounds.Re2breadth) );
     k = min(k, winHeight/(surface.Bounds.Im2breadth) );
     if(S instanceof SurfacesTensor) k/= math.max(...S.periodicityCounts);
-    k*=1.5;
+    k*=2.0; // heuristic
     updateScale(k);
 }
 function centerToSurface(S){
@@ -327,9 +327,9 @@ function STEP(delta,epsilon,t){
     else return epsilon;
 }
 const animation_TEMPLATE = {
-    fps: 25, //update rate of animation, indipendent of sketch
+    fps: 30, //update rate of animation, indipendent of sketch
     frameFrequency: 1, // canvas FPS divided by desired fps of animation
-    precision: 3, // used in .toPrecision()
+    precision: 4, // used in .toPrecision()
     period: 25, // time in seconds of a period of the cyclic animation
     t0: 0, // start time
     setup:  ()=>{
@@ -339,24 +339,24 @@ const animation_TEMPLATE = {
     draw: (t)=>{
         const project = animation_TEMPLATE;
 
-        let k = (-0.0 + OSCILLATOR(0.2,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
+        let k = (-0.0 + OSCILLATOR(0.3,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
 
-        let x = (-0.3 + OSCILLATOR(0.6,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
-        let y = (-0.3 + OSCILLATOR(0.6,1/project.period,t-project.t0+project.period/4)) *  STEP(1,1,t-project.t0);
+        let x = (-0.2 + OSCILLATOR(0.5,1/project.period,t-project.t0)) *  STEP(1,1,t-project.t0);
+        let y = (-0.2 + OSCILLATOR(0.5,1/project.period,t-project.t0+project.period/4)) *  STEP(1,1,t-project.t0);
 
-        k1Slider.value = ( 0.2 + k ).toFixed(project.precision);
-        k2Slider.value = (0.15 + OSCILLATOR(k*0.95,2/project.period,t-project.t0) ).toFixed(project.precision);
+        k1Slider.value = ( 0.5 + k ).toFixed(project.precision);
+        k2Slider.value = (0.2 + OSCILLATOR(k*0.95,1/project.period,t-project.t0) ).toFixed(project.precision);
 
         updateModuli();
 
         let M = [
             [1, 0, 0, x.toPrecision(project.precision)],
-            [0, 1, 0, y.toPrecision(project.precision)],
+            [0, 1, 0, (0.2+y).toPrecision(project.precision)],
             [0, 0, 1, 0.5],
         ]
         updateProjectionMatrix(M);
 
-        if(autoFocus || t<3.5) centerToSurface(surfacesTensor);
+        if(autoFocus || t<2.5) centerToSurface(surfacesTensor);
     }
 }
 
@@ -422,7 +422,7 @@ const animation_MYSELF = {
 
 let surfacesTensor;
 const surfacesTensorPeriodStart = [0,0,0,0];
-const surfacesTensorPeriodicityStart = [3,1,3,2];
+const surfacesTensorPeriodicityStart = [3,1,2,2];
 
 const vertexToTextOffset = [-4,-4,0];
 
