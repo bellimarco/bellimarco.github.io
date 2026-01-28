@@ -56,22 +56,33 @@
                         </table>
                     </td>
                     <td colspan="1" rowspan="1" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right;">
-                            <script>
-                                const HOMEVIDEO = document.getElementById("hero-video");
-                                document.addEventListener("touchstart", () => { HOMEVIDEO.play().catch(() => {}); }, { once: true });
-                            </script>
-                            <video id="home-video" width="200" autoplay muted playsinline loop preload="auto" poster="resources/Aguadeno.png">
-                            <!-- MP4 must be first for iPad! -->
-                            <source src="resources/MyselfInJacobian.mpg" type="video/mpeg" showstatusbar="false"><!-- ?? -->
-                            <source src="resources/MyselfInJacobian.mp4" type="video/mp4" showstatusbar="false"><!-- Safari / iOS, IE9 -->
-                            <source src="resources/MyselfInJacobian.webm" type="video/webm" showstatusbar="false"><!-- Chrome10+, Ffx4+, Opera10.6+ -->
-                            <source src="resources/MyselfInJacobian.ogv" type="video/ogg" showstatusbar="false"><!-- Firefox3.6+ / Opera 10.5+ -->
-
-                            <!-- fallback image -->
-                            <img src="resources/Aguadeno.jpeg" width="640" height="360" alt="El Aguadeño !" title="No video playback capabilities.">
-                            --&gt;
-                            </video>
-                            <a href="GenusTwoApplet/applet.html" target="_self" rel="noopener noreferrer">Myself embedded in the Jacobian of a genus two curve, for varying moduli.</a>
+                        <img id="ProfilePicture" src="resources/Aguadeno.png" style="width:200; display:block;" alt="">
+                        <video id="ProfileVideo" width="200" muted playsinline loop preload="auto" poster="resources/Aguadeno.png" style="display:none;">
+                        <script>
+                            const video  = document.getElementById("ProfileVideo");
+                            const poster = document.getElementById("ProfilePicture");
+                            function startVideo() {
+                                video.style.display = "block";
+                                poster.style.display = "none";
+                                video.play().catch(() => {});
+                            }
+                            setTimeout(startVideo, 1000);
+                            // if doesn' start automatically, listen for any user interaction
+                            document.addEventListener("touchstart", startVideo, { once: true });
+                            document.addEventListener("click", startVideo, { once: true });
+                            document.addEventListener("scroll", startVideo, { once: true });
+                            document.addEventListener("mousemove", startVideo, { once: true });
+                        </script>
+                        <!-- MP4 must be first for iPad! -->
+                        <source src="resources/MyselfInJacobian.mpg" type="video/mpeg" showstatusbar="false"><!-- ?? -->
+                        <source src="resources/MyselfInJacobian.mp4" type="video/mp4" showstatusbar="false"><!-- Safari / iOS, IE9 -->
+                        <source src="resources/MyselfInJacobian.webm" type="video/webm" showstatusbar="false"><!-- Chrome10+, Ffx4+, Opera10.6+ -->
+                        <source src="resources/MyselfInJacobian.ogv" type="video/ogg" showstatusbar="false"><!-- Firefox3.6+ / Opera 10.5+ -->
+                        <!-- fallback image -->
+                        <img src="resources/Aguadeno.png" width="640" height="360" alt="El Aguadeño !" title="No video playback capabilities.">
+                        --&gt;
+                        </video>
+                        <a href="GenusTwoApplet/applet.html" target="_self" rel="noopener noreferrer">Myself embedded in the Jacobian of a genus two curve, for varying moduli.</a>
                     </td>
                 </tr>
             </tbody>
