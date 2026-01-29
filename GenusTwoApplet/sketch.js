@@ -371,10 +371,10 @@ function STEP(delta,epsilon,t){
     else return epsilon;
 }
 const animation_TEMPLATE = {
-    fps: 20, //update rate of animation, indipendent of sketch
-    frameFrequency: 1, // canvas FPS divided by desired fps of animation
+    fps: 22, //update rate of animation, indipendent of sketch
+    frameFrequency: null, // canvas FPS divided by desired fps of animation
     precision: 4, // used in .toPrecision()
-    period: 25, // time in seconds of a period of the cyclic animation
+    period: 20, // time in seconds of a period of the cyclic animation
     t0: 0, // start time
     setup:  ()=>{
         animation_TEMPLATE.frameFrequency = FPS/animation_TEMPLATE.fps;
@@ -394,8 +394,8 @@ const animation_TEMPLATE = {
         updateModuli();
 
         let M = [
-            [1, 0, 0, x.toPrecision(project.precision)],
-            [0, 1, 0, (0.2+y).toPrecision(project.precision)],
+            [1, 0, 0, parseFloat(x.toPrecision(project.precision))],
+            [0, 1, 0, parseFloat((0.2+y).toPrecision(project.precision))],
             [0, 0, 1, 0.5],
         ]
         updateProjectionMatrix(M);
@@ -499,8 +499,6 @@ function setup() {
     canvas.mouseWheel(CanvasMouseWheel);
     // canvas.mouseDragged(CanvasMouseDragged); // this is set globally
     //canvas.keyIsDown(CanvasKeyPressed);
-
-    setupDOM();
 
     setupHyperellipticIntegrators();
     integralsArray = new IntegralsArray(parseFloat(k1Slider.value), parseFloat(k2Slider.value),true);
@@ -1205,11 +1203,13 @@ class SurfacesTensor {
     }
 
     updateProjection(){
+        this.reduce();  // if projection changes, old surfaces in the tensor might be out of place
         this.iterate((surface)=>{
             surface.updateProjection();
         })
     }
     updateScreen(){
+        this.reduce();  // if scale changes, old surfaces in the tensor might be out of place
         this.iterate((surface)=>{
             surface.updateScreen();
         })
@@ -1252,9 +1252,7 @@ class SurfacesTensor {
     }
 
     updatePeriodCounts(counts, updateGraphics=false){
-         // if periods change, old surfaces in the tensor might be out of place
-        this.reduce();
-
+        this.reduce();  // if periods change, old surfaces in the tensor might be out of place
         this.periodCounts = [counts[0],counts[1],counts[2],counts[3]];
         for(let i1=0; i1<this.periodicityCounts[0]; i1++){
             for(let i2=0; i2<this.periodicityCounts[1]; i2++){
@@ -1429,21 +1427,25 @@ function drawAxes(fit = false) {
 // ==================== DOM CONTROL =================================
 
 
-function setupDOM() {
+document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("btn-animation")
         .classList.toggle("is-on", runAnimation);
+
     document.getElementById("btn-autofocus")
         .classList.toggle("is-on", autoFocus);
+
     document.getElementById("btn-linemesh")
         .classList.toggle("is-on", showLineMeshes);
+
     document.getElementById("btn-vertexlabels")
         .classList.toggle("is-on", showVertexLabels);
+
     document.getElementById("btn-axes")
         .classList.toggle("is-on", showAxes);
 
-
-    // building Projection Matrix
+    
+        // building Projection Matrix
     const table = document.getElementById('projectionMatrixTable');
     table.innerHTML = '';
     for (let i = 0; i < ProjectionMatrix.length; i++) {
@@ -1481,7 +1483,8 @@ function setupDOM() {
         .addEventListener('click', () =>
             updateProjectionMatrix(ProjectionTemplates.C2)
         ); 
-}
+});
+
 
 function toggleAnimation() {
     runAnimation = !runAnimation;
