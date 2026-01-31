@@ -53,11 +53,6 @@ function mouseReleased() {
     dragging = false;
 }
 
-
-
-
-
-
 let panX = 0; //camera translation
 let panY = 0;
 let panZ = 0;
@@ -180,40 +175,61 @@ function keyPressed() {
 }
 
 
+
+
 // ============= touchscreen capabilities =======================
 let lastTouchX = 0;
 let lastTouchY = 0;
 let lastPinchDist = null;
 let lastTwoFingerCenter = null;
+function touchInsideCanvas(touch) {
+    const rect = cnv.elt.getBoundingClientRect();
+    return (
+        touch.x >= rect.left &&
+        touch.x <= rect.right &&
+        touch.y >= rect.top &&
+        touch.y <= rect.bottom
+    );
+}
 function touchDist(t0, t1) {
-    let dx = t0.x - t1.x;
-    let dy = t0.y - t1.y;
+    let dx = t0.clientX - t1.clientX;
+    let dy = t0.clientY - t1.clientY;
     return Math.sqrt(dx * dx + dy * dy);
 }
 function touchCenter(t0, t1) {
     return {
-        x: (t0.x + t1.x) * 0.5,
-        y: (t0.y + t1.y) * 0.5
+        x: (t0.clientX + t1.clientX) * 0.5,
+        y: (t0.clientY + t1.clientY) * 0.5
     };
 }
 function CanvasTouchStarted(event) {
+    // Ignore touches that start outside canvas
+    for (let t of event.touches) {
+        if (!touchInsideCanvas(t)) return true;
+    }
+
     if (event.touches.length === 1) {
-        lastTouchX = event.touches[0].x;
-        lastTouchY = event.touches[0].y;
+        lastTouchX = event.touches[0].clientX;
+        lastTouchY = event.touches[0].clienty;
     }
     else if (event.touches.length === 2) {
         lastPinchDist = touchDist(event.touches[0], event.touches[1]);
         lastTwoFingerCenter = touchCenter(event.touches[0], event.touches[1]);
     }
-    event.preventDefault(); // absorb event
+    // event.preventDefault(); // absorb event
     return false; // absorb event (safe?)
 }
 function CanvasTouchMoved(event) {
+    // Ignore touches that start outside canvas
+    for (let t of touches) {
+        if (!touchInsideCanvas(t)) return true;
+    }
+    
     if (event.touches.length === 1) {
-        let dx = event.touches[0].x - lastTouchX;
-        let dy = event.touches[0].y - lastTouchY;
-        lastTouchX = event.touches[0].x;
-        lastTouchY = event.touches[0].y;
+        let dx = event.touches[0].clientX - lastTouchX;
+        let dy = event.touches[0].clientY - lastTouchY;
+        lastTouchX = event.touches[0].clientX;
+        lastTouchY = event.touches[0].clientY;
         panX += dx;
         panY += dy;
         centerX = panX;
@@ -239,7 +255,7 @@ function CanvasTouchMoved(event) {
         }
         lastTwoFingerCenter = center;
     }
-    event.preventDefault(); // absorb event
+    // event.preventDefault(); // absorb event
     return false; // absorb event (safe?)
 }
 function CanvasTouchEnded(event) {
@@ -247,7 +263,7 @@ function CanvasTouchEnded(event) {
         lastPinchDist = null;
         lastTwoFingerCenter = null;
     }
-    event.preventDefault(); // absorb event
+    // event.preventDefault(); // absorb event
     return false; // absorb event (safe?)
 }
 
