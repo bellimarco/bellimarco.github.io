@@ -178,6 +178,7 @@ function keyPressed() {
 
 
 // ============= touchscreen capabilities =======================
+let touchSessionActive = false;
 let lastTouchX = 0;
 let lastTouchY = 0;
 let lastPinchDist = null;
@@ -203,141 +204,63 @@ function touchCenter(t0, t1) {
     };
 }
 function touchStarted() {
-    // Ignore touches that start outside canvas
+    // Only activate if ALL touches start inside canvas
     for (let t of touches) {
-        if (!touchInsideCanvas(t)) return true;
+        if (!touchInsideCanvas(t)) {
+            touchSessionActive = false;
+            return true; // allow HTML interaction
+        }
     }
-
+    touchSessionActive = true;
     if (touches.length === 1) {
         lastTouchX = touches[0].x;
         lastTouchY = touches[0].y;
     }
-
     if (touches.length === 2) {
         lastPinchDist = touchDist(touches[0], touches[1]);
         lastTwoFingerCenter = touchCenter(touches[0], touches[1]);
     }
-
-    return false;
+    return false; // absorb event
 }
+
 function touchMoved() {
-    // All active touches must remain inside canvas
-    for (let t of touches) {
-        if (!touchInsideCanvas(t)) return true;
-    }
+    if (!touchSessionActive) return true;
 
-    // PAN
     if (touches.length === 1) {
-        let tx = touches[0].x;
-        let ty = touches[0].y;
-
-        let dx = tx - lastTouchX;
-        let dy = ty - lastTouchY;
-
-        panX += dx;
-        panY += dy;
+        panX += touches[0].x - lastTouchX;
+        panY += touches[0].y - lastTouchY;
         centerX = panX;
         centerY = panY;
-
-        lastTouchX = tx;
-        lastTouchY = ty;
+        lastTouchX = touches[0].x;
+        lastTouchY = touches[0].y;
     }
     else if (touches.length === 2) {
-        let t0 = touches[0];
-        let t1 = touches[1];
         // Zoom
-        let d = touchDist(t0, t1);
+        let d = touchDist(touches[0], touches[1]);
         if (lastPinchDist !== null) {
             scaleCamera *= (1 + (d - lastPinchDist) * 0.002);
             scaleCamera = constrain(scaleCamera, 0.2, 5);
         }
         lastPinchDist = d;
         // Rotate
-        let center = touchCenter(t0, t1);
+        let center = touchCenter(touches[0], touches[1]);
         if (lastTwoFingerCenter) {
-            let dx = center.x - lastTwoFingerCenter.x;
-            let dy = center.y - lastTwoFingerCenter.y;
-            rotY += dx * 0.005;
-            rotX += -dy * 0.005;
+            rotY += (center.x - lastTwoFingerCenter.x) * 0.005;
+            rotX += -(center.y - lastTwoFingerCenter.y) * 0.005;
         }
         lastTwoFingerCenter = center;
     }
-    return false;
+    return false; // absorb event
 }
+
 function touchEnded() {
-    lastPinchDist = null;
-    lastTwoFingerCenter = null;
-    return false;
+    if (touches.length === 0) {
+        touchSessionActive = false;
+        lastPinchDist = null;
+        lastTwoFingerCenter = null;
+    }
+    return true; // allow clicks to propagate
 }
-
-
-
-// function CanvasTouchStarted(event) {
-//     // Ignore touches that start outside canvas
-//     // for (let t of event.touches) {
-//     //     if (!touchInsideCanvas(t)) return true;
-//     // }
-
-//     if (event.touches.length === 1) {
-//         lastTouchX = event.touches[0].clientX;
-//         lastTouchY = event.touches[0].clienty;
-//     }
-//     else if (event.touches.length === 2) {
-//         lastPinchDist = touchDist(event.touches[0], event.touches[1]);
-//         lastTwoFingerCenter = touchCenter(event.touches[0], event.touches[1]);
-//     }
-//     // event.preventDefault(); // absorb event
-//     // return false; // absorb event (safe?)
-// }
-// function CanvasTouchMoved(event) {
-//     // Ignore touches that start outside canvas
-//     // for (let t of touches) {
-//     //     if (!touchInsideCanvas(t)) return true;
-//     // }
-    
-//     if (event.touches.length === 1) {
-//         let dx = event.touches[0].clientX - lastTouchX;
-//         let dy = event.touches[0].clientY - lastTouchY;
-//         lastTouchX = event.touches[0].clientX;
-//         lastTouchY = event.touches[0].clientY;
-//         panX += dx;
-//         panY += dy;
-//         centerX = panX;
-//         centerY = panY;
-//     }
-//     else if (touches.length === 2) {
-//         // ZOOM pinch
-//         let d = touchDist(event.touches[0], event.touches[1]);
-//         if (lastPinchDist !== null) {
-//             let pinchDelta = d - lastPinchDist;
-//             scaleCamera *= (1 + pinchDelta * 0.002);
-//             scaleCamera = constrain(scaleCamera, 0.2, 5);
-//         }
-//         lastPinchDist = d;
-
-//         // ROTATE two-finger drag
-//         let center = touchCenter(event.touches[0], event.touches[1]);
-//         if (lastTwoFingerCenter) {
-//             let dx = center.x - lastTwoFingerCenter.x;
-//             let dy = center.y - lastTwoFingerCenter.y;
-//             rotY += dx * 0.005;
-//             rotX += -dy * 0.005;
-//         }
-//         lastTwoFingerCenter = center;
-//     }
-//     // event.preventDefault(); // absorb event
-//     // return false; // absorb event (safe?)
-// }
-// function CanvasTouchEnded(event) {
-//     if (event.touches.length < 2) {
-//         lastPinchDist = null;
-//         lastTwoFingerCenter = null;
-//     }
-//     // event.preventDefault(); // absorb event
-//     // return false; // absorb event (safe?)
-// }
-
-
 
 
 
