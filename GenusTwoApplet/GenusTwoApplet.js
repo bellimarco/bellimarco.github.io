@@ -657,7 +657,7 @@ let smoothingLevel = 2;
 function setup() {
     winWidth = windowWidth*0.8;
     winHeight = math.min(0.75*winWidth,windowHeight*0.7);
-    let canvas = createCanvas(winWidth, winHeight, WEBGL);
+    canvas = createCanvas(winWidth, winHeight, WEBGL);
     canvas.parent('canvas-container');
 
     textureMode(NORMAL); // important for correct uv texture coordinate 0<u,v<1
