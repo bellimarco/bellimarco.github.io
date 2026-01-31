@@ -193,7 +193,7 @@ function touchCenter(t0, t1) {
         y: (t0.y + t1.y) * 0.5
     };
 }
-function touchStarted() {
+function CanvasTouchStarted() {
     if (touches.length === 1) {
         lastTouchX = touches[0].x;
         lastTouchY = touches[0].y;
@@ -205,7 +205,7 @@ function touchStarted() {
 
     return false; // stop browser gestures
 }
-function touchMoved() {
+function CanvasTouchMoved() {
     if (touches.length === 1) {
         let tx = touches[0].x;
         let ty = touches[0].y;
@@ -248,7 +248,7 @@ function touchMoved() {
 
     return false;
 }
-function touchEnded() {
+function CanvasTouchEnded() {
     if (touches.length < 2) {
         lastPinchDist = null;
         lastTwoFingerCenter = null;
@@ -592,6 +592,10 @@ function setup() {
     canvas.mouseWheel(CanvasMouseWheel);
     // canvas.mouseDragged(CanvasMouseDragged); // this is set globally
     //canvas.keyIsDown(CanvasKeyPressed);
+
+    canvas.touchStarted(CanvasTouchStarted);
+    canvas.touchEnded(CanvasTouchEnded);
+    canvas.touchMoved(CanvasTouchMoved);
 
     setupHyperellipticIntegrators();
     integralsArray = new IntegralsArray(parseFloat(k1Slider.value), parseFloat(k2Slider.value),true);
