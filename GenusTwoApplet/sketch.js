@@ -204,9 +204,9 @@ function touchCenter(t0, t1) {
 }
 function CanvasTouchStarted(event) {
     // Ignore touches that start outside canvas
-    for (let t of event.touches) {
-        if (!touchInsideCanvas(t)) return true;
-    }
+    // for (let t of event.touches) {
+    //     if (!touchInsideCanvas(t)) return true;
+    // }
 
     if (event.touches.length === 1) {
         lastTouchX = event.touches[0].clientX;
@@ -221,9 +221,9 @@ function CanvasTouchStarted(event) {
 }
 function CanvasTouchMoved(event) {
     // Ignore touches that start outside canvas
-    for (let t of touches) {
-        if (!touchInsideCanvas(t)) return true;
-    }
+    // for (let t of touches) {
+    //     if (!touchInsideCanvas(t)) return true;
+    // }
     
     if (event.touches.length === 1) {
         let dx = event.touches[0].clientX - lastTouchX;
