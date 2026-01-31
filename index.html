@@ -59,14 +59,12 @@
                         <img id="ProfilePicture" src="resources/Aguadeno.png" style="width:200; display:block;" alt="">
                         <video id="ProfileVideo" width="200" muted playsinline loop preload="auto" poster="resources/Aguadeno.png" style="display:none;">
                         <script>
-                            const video  = document.getElementById("ProfileVideo");
-                            const poster = document.getElementById("ProfilePicture");
                             function startVideo() {
-                                video.style.display = "block";
-                                poster.style.display = "none";
-                                video.play().catch(() => {});
+                                document.getElementById("ProfilePicture").style.display = "none";
+                                document.getElementById("ProfileVideo").style.display = "block";
+                                document.getElementById("ProfileVideo").play().catch(() => {});
                             }
-                            setTimeout(startVideo, 1000);
+                            setTimeout(startVideo,1);
                             // if doesn' start automatically, listen for any user interaction
                             document.addEventListener("touchstart", startVideo, { once: true });
                             document.addEventListener("click", startVideo, { once: true });
@@ -76,13 +74,12 @@
                         <!-- MP4 must be first for iPad! -->
                         <source src="resources/MyselfInJacobian.mp4" type="video/mp4" showstatusbar="false"><!-- Safari / iOS, IE9 -->
                         <source src="resources/MyselfInJacobian.webm" type="video/webm" showstatusbar="false"><!-- Chrome10+, Ffx4+, Opera10.6+ -->
-                        <source src="resources/MyselfInJacobian.mpg" type="video/mpeg" showstatusbar="false"><!-- ?? -->
                         <source src="resources/MyselfInJacobian.ogv" type="video/ogg" showstatusbar="false"><!-- Firefox3.6+ / Opera 10.5+ -->
                         <!-- fallback image -->
                         <img src="resources/Aguadeno.png" width="640" height="360" alt="El Aguadeño !" title="No video playback capabilities.">
                         --&gt;
                         </video>
-                        <a href="GenusTwoApplet/applet.html" target="_self" rel="noopener noreferrer">Myself embedded in the Jacobian of a genus two curve, for varying moduli.</a>
+                        <a href="GenusTwoApplet/GenusTwoApplet.html" target="_self" rel="noopener noreferrer">Myself embedded in the Jacobian of a genus two curve, for varying moduli.</a>
                     </td>
                 </tr>
             </tbody>
@@ -149,7 +146,9 @@
         <div style="border-top:0px solid #000">
             <b class="entry">Other Interests</b><br>
             <table>
-                <tr><td>Building robots and DIY projects, see my github at <a href="https://github.com/bellimarco">bellimarco</a>.</td></tr>
+                <tr><td><a href="/GenusTwoApplet/GenusTwoApplet.html">Genus Two Applet</a>: a p5.js based web application for visualizing the embeddings of genus two curves into their Jacobians for varying moduli.
+                </td></tr>
+                <tr><td>Building robots and DIY projects. My github portfolio is at <a href="https://github.com/bellimarco">bellimarco</a>.</td></tr>
             </table>
             <br>
         </div>

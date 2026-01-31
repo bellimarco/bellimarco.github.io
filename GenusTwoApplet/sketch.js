@@ -1,7 +1,7 @@
-// ============ p5.js interaction ======================================
+// ============ p5.js globals ======================================
 
 let canvas;
-let winWidth; // in setup function
+let winWidth; // set in setup function
 let winHeight;
 const FPS = 30;
 
@@ -16,6 +16,21 @@ function preload() {
     fontBold = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Bold.otf');
 
     //TextureImage = loadImage('/resources/Aguadeno.png');
+}
+
+
+
+
+
+
+// ============ p5.js interaction ======================================
+
+let scaleCamera = 1.0;
+function CanvasMouseWheel(event) {
+    scaleCamera *= (1 - event.deltaY * 0.001);
+    scaleCamera = constrain(scaleCamera, 0.2, 5);  // prevent inversion / disappearance
+    event.preventDefault(); // prevent page scroll
+    return false; // prevent page scroll
 }
 
 let lastMouseX, lastMouseY; //dragging variables
@@ -35,6 +50,11 @@ function mouseReleased() {
     draggingAxis4 = false;
     dragging = false;
 }
+
+
+
+
+
 
 let panX = 0; //camera translation
 let panY = 0;
@@ -92,13 +112,7 @@ function mouseDragged() {
     lastMouseY = mouseY;
 }
 
-let scaleCamera = 1.0;
-function CanvasMouseWheel(event) {
-    scaleCamera *= (1 - event.deltaY * 0.001);
-    scaleCamera = constrain(scaleCamera, 0.2, 5);  // prevent inversion / disappearance
-    event.preventDefault(); // prevent page scroll
-    return false; // prevent page scroll
-}
+
 
 const translationControlsSpeed = 10;
 const rotationControlsSpeed = 0.08;
@@ -143,7 +157,7 @@ function updateKeyIsDown(){
 function keyPressed() {
 
     if (keyIsDown(67)) {
-        zoom = 1;
+        scaleCamera = 1;
         rotX = 0;
         rotY = 0;
         rotZ = 0;
@@ -162,6 +176,85 @@ function keyPressed() {
     }
 }
 
+
+// ============= touchscreen capabilities =======================
+let lastTouchX = 0;
+let lastTouchY = 0;
+let lastPinchDist = null;
+let lastTwoFingerCenter = null;
+function touchDist(t0, t1) {
+    let dx = t0.x - t1.x;
+    let dy = t0.y - t1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+function touchCenter(t0, t1) {
+    return {
+        x: (t0.x + t1.x) * 0.5,
+        y: (t0.y + t1.y) * 0.5
+    };
+}
+function touchStarted() {
+    if (touches.length === 1) {
+        lastTouchX = touches[0].x;
+        lastTouchY = touches[0].y;
+    }
+    else if (touches.length === 2) {
+        lastPinchDist = touchDist(touches[0], touches[1]);
+        lastTwoFingerCenter = touchCenter(touches[0], touches[1]);
+    }
+
+    return false; // stop browser gestures
+}
+function touchMoved() {
+    if (touches.length === 1) {
+        let tx = touches[0].x;
+        let ty = touches[0].y;
+
+        let dx = tx - lastTouchX;
+        let dy = ty - lastTouchY;
+
+        panX += dx;
+        panY += dy;
+        centerX = panX;
+        centerY = panY;
+
+        lastTouchX = tx;
+        lastTouchY = ty;
+    }
+    else if (touches.length === 2) {
+        let t0 = touches[0];
+        let t1 = touches[1];
+
+        // ZOOM pinch
+        let d = touchDist(t0, t1);
+        if (lastPinchDist !== null) {
+            let pinchDelta = d - lastPinchDist;
+            scaleCamera *= (1 + pinchDelta * 0.002);
+            scaleCamera = constrain(scaleCamera, 0.2, 5);
+        }
+        lastPinchDist = d;
+
+        // ROTATE two-finger drag
+        let center = touchCenter(t0, t1);
+        if (lastTwoFingerCenter) {
+            let dx = center.x - lastTwoFingerCenter.x;
+            let dy = center.y - lastTwoFingerCenter.y;
+
+            rotY += dx * 0.005;
+            rotX += -dy * 0.005;
+        }
+        lastTwoFingerCenter = center;
+    }
+
+    return false;
+}
+function touchEnded() {
+    if (touches.length < 2) {
+        lastPinchDist = null;
+        lastTwoFingerCenter = null;
+    }
+    return false;
+}
 
 
 
