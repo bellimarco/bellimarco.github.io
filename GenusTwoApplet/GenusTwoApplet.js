@@ -12,12 +12,22 @@ let fontSize = 10;
 
 let TextureImage = null;
 let textureLoadFailTimer = null;
+function shortenFileName(filename, maxLength = 10) {
+    if (filename.length <= maxLength) return filename;
+    const extIndex = filename.lastIndexOf('.');
+    const ext = extIndex >= 0 ? filename.slice(extIndex) : '';
+    const base = filename.slice(0, maxLength - ext.length - 1); // leave space for "…"
+    return base + '…' + ext;
+}
+
 function onTextureLoaded(filename, imageFile) {
     const btn = document.getElementById("btn-load-texture");
     const del = document.getElementById("btn-unload-texture");
 
-    btn.textContent = filename;
+    btn.textContent =  shortenFileName(filename, 20); // truncate if too long;
     btn.classList.add("is-on");
+
+    btn.style.fontSize = math.ceil((14* math.min(1,(12/ btn.textContent.length)))) +"px";
 
     del.style.display = "inline-block";
 
@@ -36,6 +46,7 @@ function unloadTexture() {
 
     btn.textContent = "Load texture";
     btn.classList.remove("is-on");
+    btn.style.fontSize = "";
 
     del.style.display = "none";
     input.value = ""; // allow reloading same file
@@ -421,7 +432,7 @@ let centerX = 0;
 let centerY = 0;
 let centerZ = 0;
 let strollCentering = true; // wether centerToSurface() should not directly affect panX,panY, but stroll to it smoothly
-let strollCenteringDamping = 0.08;
+let strollCenteringDamping = 0.12;
 
 function centerToSurface(S){
     let center;
@@ -442,10 +453,10 @@ function centerToSurface(S){
     if(strollCentering){ centerX = -center[0]; centerY = -center[1]; centerZ = -center[2]; }
     else{ panX = -center[0]; panY = -center[1]; panZ = -center[2]; }
 }
-function updateStrollCentering(k = strollCenteringDamping){
-    panX += (centerX-panX)*k;
-    panY += (centerY-panY)*k;
-    panY += (centerY-panY)*k;
+function updateStrollCentering(){
+    panX += (centerX-panX)*strollCenteringDamping;
+    panY += (centerY-panY)*strollCenteringDamping;
+    panZ += (centerZ-panZ)*strollCenteringDamping;
 }
 
 function screenMap(Z){

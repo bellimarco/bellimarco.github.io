@@ -237,8 +237,14 @@ button.is-on:hover {
     display: flex;
     align-items: center;
 }
-#texture-loader button{
+#btn-load-texture{
     margin: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    /* max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; */
 }
 #btn-unload-texture {
     width: 28px;
