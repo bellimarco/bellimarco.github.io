@@ -286,8 +286,9 @@ function touchCenter(t0, t1) {
     };
 }
 function touchStarted() {
-    // Only activate if ALL touches start inside canvas
-    if (!IsTouchDevice()) return true;
+    if (touches.length === 0) return true;
+    //if (!IsTouchDevice()) return true;
+    // only activate if ALL touches start inside canvas
     for (let t of touches) {
         if (!touchInsideCanvas(t)) {
             touchSessionActive = false;
@@ -308,7 +309,8 @@ function touchStarted() {
 }
 
 function touchMoved() {
-    if (!IsTouchDevice()) return true;
+    if (touches.length === 0) return true;
+    // if (!IsTouchDevice()) return true;
     if (!touchSessionActive) return true;
 
     if (touches.length === 1) {
@@ -675,7 +677,10 @@ function setup() {
     canvas = createCanvas(winWidth, winHeight, WEBGL);
     canvas.parent('canvas-container');
 
-    IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
+    
+    setTimeout(()=>{
+        IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
+    },500);
 
     textureMode(NORMAL); // important for correct uv texture coordinate 0<u,v<1
     frameRate(FPS);
