@@ -233,6 +233,19 @@ button.is-on:hover {
     line-height: 1.4;
 }
 
+#texture-loader {
+    display: flex;
+    align-items: center;
+}
+#texture-loader button{
+    margin: 2px;
+}
+#btn-unload-texture {
+    width: 28px;
+    padding: 4px;
+    font-weight: bold;
+}
+
 
 
 

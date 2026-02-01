@@ -8,15 +8,83 @@ const FPS = 30;
 let font;
 let fontBold;
 let fontSize = 10;
-let TextureImage;
-function preload() {
-    font = loadFont(
-        'https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Regular.otf'
-    );
-    fontBold = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Bold.otf');
 
-    //TextureImage = loadImage('/resources/Aguadeno.png');
+
+let TextureImage = null;
+let textureLoadFailTimer = null;
+function onTextureLoaded(filename, imageFile) {
+    const btn = document.getElementById("btn-load-texture");
+    const del = document.getElementById("btn-unload-texture");
+
+    btn.textContent = filename;
+    btn.classList.add("is-on");
+
+    del.style.display = "inline-block";
+
+    TextureImage = imageFile;
+
+    if(surfacesTensor){
+        surfacesTensor.updateTexture(true,TextureImage);
+    }
 }
+function unloadTexture() {
+    customTexture = null;
+
+    const btn = document.getElementById("btn-load-texture");
+    const del = document.getElementById("btn-unload-texture");
+    const input = document.getElementById("texture-file-input");
+
+    btn.textContent = "Load texture";
+    btn.classList.remove("is-on");
+
+    del.style.display = "none";
+    input.value = ""; // allow reloading same file
+
+    if(surfacesTensor){
+        surfacesTensor.updateTexture(false);
+    }
+}
+function onTextureLoadFailed(error,file) {
+    console.error("p5 loadImage failed", error);
+    alert("Failed to load image: " + file.name +". \nPlease try another file.");
+}
+function openTextureDialog() {
+    document.getElementById("texture-file-input").click();
+    document
+    .getElementById("texture-file-input")
+    .addEventListener("change", function (event) {
+
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onerror = () => { console.error("FileReader error while reading texture file"); reader.abort(); };
+        reader.onabort = () => { console.warn("FileReader aborted"); };
+        reader.onload = (e) => {
+            let imageLoadSuccess = false;
+            loadImage(
+                e.target.result,
+                imageFile => { // SUCCESS
+                    if(!imageLoadSuccess){
+                        imageLoadSuccess = true;
+                        onTextureLoaded(file.name, imageFile);
+                    }
+                },
+                error => { // FAILURE (may be called multiple times)
+                    if (imageLoadSuccess) return; // if one of the last tries was a success
+                    textureLoadFailTimer = setTimeout(() => {
+                        if (imageLoadSuccess) return;
+                        onTextureLoadFailed(error,file);
+                    }, 500); // debounce window
+                }
+            );
+
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 
 
 
@@ -25,27 +93,37 @@ function preload() {
 
 // ============ p5.js interaction ======================================
 
+function mouseInsideCanvas() {
+    const rect = canvas.elt.getBoundingClientRect();
+    return (
+        mouseX >= 0 && mouseX <= width &&
+        mouseY >= 0 && mouseY <= height
+    );
+}
+
 let scaleCamera = 1.0;
-function CanvasMouseWheel(event) {
+function mouseWheel() {
+    // only handle if mouse started on canvas
+    if (!mouseInsideCanvas()) return;
+
     scaleCamera *= (1 - event.deltaY * 0.001);
     scaleCamera = constrain(scaleCamera, 0.2, 5);  // prevent inversion / disappearance
-    event.preventDefault(); // absorb event
+
     return false; // absorb event (safe?)
 }
 
 let lastMouseX, lastMouseY; //dragging variables
 let dragging = false;
-function CanvasMousePressed(event) {
+function mousePressed() {
+     // only handle if mouse started on canvas
+    if (!mouseInsideCanvas()) return;
+
     if(showAxes){ updateAxis4Gizmo(); }
-    if (hoveringAxis4) {
-        draggingAxis4 = true;
-    }
-    else{
-        dragging = true;
-    }
+    if (!hoveringAxis4){ dragging = true; }
+    else{ draggingAxis4 = true; }
+
     lastMouseX = mouseX;
     lastMouseY = mouseY;
-    event.preventDefault(); // absorb event
     return false; // absorb event (safe?)
 }
 function mouseReleased() {
@@ -77,9 +155,11 @@ function showFocus(){
 function mouseDragged() {
     let dx = mouseX - lastMouseX;
     let dy = mouseY - lastMouseY;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
     if (draggingAxis4) {
         // screen-space → world-space heuristic
-        axis4Dir = [axis4Dir[0]+dx*0.00005,axis4Dir[1]-dy*0.00005,axis4Dir[2]];
+        axis4Dir = [axis4Dir[0]+dx*0.001,axis4Dir[1]-dy*0.001,axis4Dir[2]];
         axis4Dir = scaleVec(axisDirMagn/math.sqrt(axis4Dir[0]**2+axis4Dir[1]**2+axis4Dir[2]**2), axis4Dir);
         // axis4Dir[0] = axis4Dir[0].toPrecision(3);
         // axis4Dir[1] = axis4Dir[1].toPrecision(3);
@@ -90,7 +170,8 @@ function mouseDragged() {
             [ProjectionMatrix[2][0],ProjectionMatrix[2][1],ProjectionMatrix[2][2],axis4Dir[2]]
         ];
         updateProjectionMatrix(M);
-        return; // swallow event
+
+        return false; // absorb DOM event
     }
     else if(dragging){
         if (keyIsDown(SHIFT)) {
@@ -104,10 +185,9 @@ function mouseDragged() {
             centerX = panX;
             centerY = panY;
         }
+        return false; // absorb DOM event
     }
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-    return false; // absorb DOM event
+    return true; // if didn't start dragging over canvas, release drag event
 }
 
 
@@ -183,6 +263,8 @@ let lastTouchX = 0;
 let lastTouchY = 0;
 let lastPinchDist = null;
 let lastTwoFingerCenter = null;
+
+let IsTouchDevice = false; // detected in setup
 function touchInsideCanvas(touch) {
     const rect = canvas.elt.getBoundingClientRect();
     return (
@@ -205,12 +287,14 @@ function touchCenter(t0, t1) {
 }
 function touchStarted() {
     // Only activate if ALL touches start inside canvas
+    if (!IsTouchDevice()) return true;
     for (let t of touches) {
         if (!touchInsideCanvas(t)) {
             touchSessionActive = false;
             return true; // allow HTML interaction
         }
     }
+
     touchSessionActive = true;
     if (touches.length === 1) {
         lastTouchX = touches[0].x;
@@ -224,6 +308,7 @@ function touchStarted() {
 }
 
 function touchMoved() {
+    if (!IsTouchDevice()) return true;
     if (!touchSessionActive) return true;
 
     if (touches.length === 1) {
@@ -254,11 +339,9 @@ function touchMoved() {
 }
 
 function touchEnded() {
-    if (touches.length === 0) {
-        touchSessionActive = false;
-        lastPinchDist = null;
-        lastTwoFingerCenter = null;
-    }
+    lastPinchDist = null;
+    lastTwoFingerCenter = null;
+    touchSessionActive = (touches.length>0);
     return true; // allow clicks to propagate
 }
 
@@ -577,27 +660,37 @@ let showVertexLabels = false;
 let showLineMeshes = false;
 let smoothingLevel = 2;
 
+function preload() {
+    font = loadFont(
+        'https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Regular.otf'
+    );
+    fontBold = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Bold.otf');
+
+    //TextureImage = loadImage('/resources/Aguadeno.png');
+}
+
 function setup() {
     winWidth = windowWidth*0.8;
     winHeight = math.min(0.75*winWidth,windowHeight*0.7);
     canvas = createCanvas(winWidth, winHeight, WEBGL);
     canvas.parent('canvas-container');
 
+    IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
+
     textureMode(NORMAL); // important for correct uv texture coordinate 0<u,v<1
     frameRate(FPS);
     textFont(font);
     textSize(fontSize);
 
-    addScreenPositionFunction();
+    if(!IsTouchDevice){ addScreenPositionFunction(); }
 
     // mouse events captured only when mouse is hovering the canvas:
-    canvas.mousePressed(CanvasMousePressed);
-    // canvas.mouseReleased(CanvasMouseReleased); //this is set globally
-    canvas.mouseWheel(CanvasMouseWheel);
-    // canvas.mouseDragged(CanvasMouseDragged); // this is set globally
+    // canvas.mousePressed(CanvasMousePressed);
+    // canvas.mouseReleased(CanvasMouseReleased); // set globally
+    // canvas.mouseWheel(CanvasMouseWheel);
+    // canvas.mouseDragged(CanvasMouseDragged); // set globally
     //canvas.keyIsDown(CanvasKeyPressed);
-
-    // canvas.touchStarted(CanvasTouchStarted);
+    // canvas.touchStarted(CanvasTouchStarted); //set globally
     // canvas.touchEnded(CanvasTouchEnded);
     // canvas.touchMoved(CanvasTouchMoved);
 
@@ -621,7 +714,7 @@ function setup() {
     for(let i=0; i<4; i++){ updatePeriodCounter(i); updatePeriodicityCounter(i); }
     
 
-    // surfacesTensor.updateTexture(true, TextureImage);
+    // surfacesTensor.updateTexture(true, TextureImage); // preloaded image
 
     if(runAnimation) projectAnimation.setup();
 }
@@ -646,14 +739,15 @@ function draw() {
 
 
 
-    if(showAxes && !runAnimation){ updateAxis4Gizmo(); }
-    else if(runAnimation && ( animationLastFrameCount + projectAnimation.frameFrequency < frameCount )){
+    if(showAxes && !runAnimation && !IsTouchDevice){ updateAxis4Gizmo(); }
+    
+    if(runAnimation && ( animationLastFrameCount + projectAnimation.frameFrequency < frameCount )){
         animationLastFrameCount = frameCount;
         projectAnimation.draw(frameCount/FPS);
     }
 
     surfacesTensor.display();
-    surfacesTensor.displayEdges(scaleFactor*0.06);
+    if(!surfacesTensor.showTexture || showLineMeshes){ surfacesTensor.displayEdges(scaleFactor*0.06); }
     if(showLineMeshes) surfacesTensor.displayMesh(scaleFactor*0.05,showVertexLabels);
 
     if(showAxes){ drawAxes(true); }

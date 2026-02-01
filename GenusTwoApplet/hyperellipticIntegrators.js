@@ -133,45 +133,45 @@ class IntegralsArray {
         //  y=sqrt(x) substitutions
 
         // 0 -------- 1
-        I11 = 2 * gaussLegendre32(0, 1,
+        I11 = 2 * gaussLegendre16(0, 1,
             y => { return 1/Math.sqrt(MyPolynomialReduced(1-y**2,k1,k2,1)); }
         ).toPrecision(3);
 
-        I21 = 2 * gaussLegendre32(0, 1,
+        I21 = 2 * gaussLegendre16(0, 1,
             y => { return (1-y**2)/Math.sqrt(MyPolynomialReduced(1-y**2,k1,k2,1)); }
         ).toPrecision(3);
 
         // 1 -------- 1/k1
         let m = (1+1/k1)/2;
-        I12 = (2 * gaussLegendre32(0, Math.sqrt(m-1),
+        I12 = (2 * gaussLegendre16(0, Math.sqrt(m-1),
             y => { return 1/Math.sqrt(MyPolynomialReduced(y**2+1,k1,k2,1)); }
-        ) + 2 * gaussLegendre32(0, Math.sqrt(1/k1-m),
+        ) + 2 * gaussLegendre16(0, Math.sqrt(1/k1-m),
             y => { return 1/Math.sqrt(-MyPolynomialReduced(1/k1-y**2,k1,k2,2)); }
         )).toPrecision(3);
-        I22 = (2 * gaussLegendre32(0, Math.sqrt(m-1),
+        I22 = (2 * gaussLegendre16(0, Math.sqrt(m-1),
             y => { return (y**2+1)/Math.sqrt(MyPolynomialReduced(y**2+1,k1,k2,1)); }
-        ) + 2 * gaussLegendre32(0, Math.sqrt(1/k1-m),
+        ) + 2 * gaussLegendre16(0, Math.sqrt(1/k1-m),
             y => { return (1/k1-y**2)/Math.sqrt(-MyPolynomialReduced(1/k1-y**2,k1,k2,2)); }
         )).toPrecision(3);
 
         // 1/k1 -------- 1/k2
         m = (1/k1+1/k2)/2;
-        I13 = (2 * gaussLegendre32(0, Math.sqrt(m-1/k1),
+        I13 = (2 * gaussLegendre16(0, Math.sqrt(m-1/k1),
             y => { return 1/Math.sqrt(-MyPolynomialReduced(y**2+1/k1,k1,k2,2)); }
-        ) + 2 * gaussLegendre32(0, Math.sqrt(1/k2-m),
+        ) + 2 * gaussLegendre16(0, Math.sqrt(1/k2-m),
             y => { return 1/Math.sqrt(MyPolynomialReduced(1/k2-y**2,k1,k2,3)); }
         )).toPrecision(3);
-        I23 = (2 * gaussLegendre32(0, Math.sqrt(m-1/k1),
+        I23 = (2 * gaussLegendre16(0, Math.sqrt(m-1/k1),
             y => { return (y**2+1/k1)/Math.sqrt(-MyPolynomialReduced(y**2+1/k1,k1,k2,2)); }
-        ) + 2 * gaussLegendre32(0, Math.sqrt(1/k2-m),
+        ) + 2 * gaussLegendre16(0, Math.sqrt(1/k2-m),
             y => { return (1/k2-y**2)/Math.sqrt(MyPolynomialReduced(1/k2-y**2,k1,k2,3)); }
         )).toPrecision(3);
 
         // 1/k2 -------- inf
-        I14 = (2 * gaussLegendre32(0, 50,
+        I14 = (2 * gaussLegendre16(0, 50,
             y => { return 1/Math.sqrt(MyPolynomialReduced(y**2+1/k2,k1,k2,3)); }
         )).toPrecision(3);
-        I24 = (2 * gaussLegendre32(0, 50,
+        I24 = (2 * gaussLegendre16(0, 50,
             y => { return (y**2+1/k2)/Math.sqrt(MyPolynomialReduced(y**2+1/k2,k1,k2,3)); }
         )).toPrecision(3);
 
