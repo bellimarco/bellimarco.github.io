@@ -36,7 +36,7 @@ let SurfaceSketch = function(p) {
     let k1 = 0.707; // surfacesTensor.integrals.k1;
     let k2 = 0.5; // surfacesTensor.integrals.k2;
     let Inf = 3;
-    let S1_Y = 0; let S2_Y=1;
+    let S1_Y = 0; let S2_Y=2;
 
     // p.fontSize = 10;
     // p.preload = function() {
@@ -123,10 +123,10 @@ let SurfaceSketch = function(p) {
     p.draw = function() {
         p.background(255);
 
-        p.rotateX(-0.4);
+        p.rotateX(-0.0);
         // p.rotateY(-0.1);
         p.scale(p.scaleCamera);
-        p.translate(0,1,-5);
+        p.translate(0,-S2_Y/2,-5);
         
 
         p.push();
