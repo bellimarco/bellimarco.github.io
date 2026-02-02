@@ -224,10 +224,10 @@ function updateKeyIsDown(){
     }
     if(keyIsDown(81)){ // 'q'
         panZ+=translationControlsSpeed;
-        centerZ = -panZ;
+        centerZ = panZ;
     }
     else if(keyIsDown(69)){ // 'e'
-        panZ-=translationControlsSpeed
+        panZ-=translationControlsSpeed;
         centerZ = panZ;
     }
     if(keyIsDown(89)){ // 'y'
@@ -244,8 +244,7 @@ function updateKeyIsDown(){
     }
 }
 function keyPressed() {
-
-    if (keyIsDown(67)) {
+    if (keyIsDown(67)) { // 'c'
         scaleCamera = 1;
         rotX = 0;
         rotY = 0;
@@ -354,7 +353,7 @@ function touchMoved() {
 function touchEnded() {
     lastPinchDist = null;
     lastTwoFingerCenter = null;
-    touchSessionActive = (touches.length>0);
+    touchSessionActive = false;
     return true; // allow clicks to propagate
 }
 
@@ -664,7 +663,7 @@ const surfacesTensorPeriodicityStart = [3,1,2,2];
 const vertexToTextOffset = [-4,-4,0];
 
 let runAnimation = true;
-let autoFocus = false;
+let autoFocus = true;
 const projectAnimation = animation_TEMPLATE; // make up your own animation !
 let animationLastFrameCount = 0; // tracker for rendering animation at its own fps
 
@@ -685,9 +684,8 @@ function preload() {
 function setup() {
     winWidth = windowWidth*0.8;
     winHeight = math.min(0.75*winWidth,windowHeight*0.7);
-    canvas = createCanvas(winWidth, winHeight, WEBGL);
-    canvas.parent('canvas-container');
-
+    canvas = createCanvas(winWidth, winHeight, WEBGL).parent('Jacobian-canvas');
+    // drawingContext.disable(drawingContext.DEPTH_TEST);
     
     setTimeout(()=>{
         IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
@@ -800,6 +798,16 @@ const colors = {
         '-+': "#78d12aD0",
         '+-': "#59d5ffD0",
         '--': "#4688fbD0",
+        '++_': "#aedf8580",
+        '-+_': "#78d12a80",
+        '+-_': "#59d5ff80",
+        '--_': "#4688fb80",
+        'InfX': "#6b1cfd",
+        'Inf-X': "#6b1cfd",
+        'InfXZ': "#6b1cfd",
+        'Inf-XZ': "#6b1cfd",
+        'Inf+': "#6b1cfd",
+        'Inf-': "#6b1cfd",
 };
 
 // array of pairs of vertex names, and vertex name of desired color

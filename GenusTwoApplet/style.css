@@ -51,15 +51,15 @@ button.is-on:hover {
 
 
 
-#canvas-frame {
+/* #canvas-frame {
     display: inline-block;
     padding: 5px;
     margin:5px;
     border: 1px solid #ddd;
     background: #fafafa;
     align-content: center;
-}
-#canvas-container {
+} */
+#Jacobian-canvas {
     display: inline-flex;
     padding: 5px;
     margin: 5px;

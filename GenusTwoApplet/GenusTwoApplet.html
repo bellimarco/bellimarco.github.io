@@ -20,17 +20,17 @@
     <script src="hyperellipticIntegrators.js"></script>
     <script src="addScreenPositionFunction.js"></script>
     <script src="GenusTwoApplet.js"></script>
+    <script src="GenusTwoSurface.js"></script>
 
     <head>    
         <title>Genus Two Applet</title>
     </head>
     <body>
         <h2 style="margin:20px">Hyperelliptic integrals of first and second kind for varying moduli of their Legendre normal forms...</h2>
-        <h3 style="margin:20px">...or in fancy terms, Abel-Jacobi embeddings of genus two curves into their Jacobians.</h3>
+        <h3 style="margin:20px">...or in fancy terms, embeddings of genus two curves into their Jacobians.</h3>
 
-        <div id="canvas-frame">
             <div style="display: flex;">
-                <div id="canvas-container"></div>
+                <div id="Jacobian-canvas"></div>
                 <div>
                     <div id="controls-view">
                         <div id="texture-loader">
@@ -188,8 +188,7 @@
                 </div>
             </div>
 
-            <div id="projection-frame">
-            
+            <div id="projection-frame">          
                 <div id="projectionMatrix">
                     <h4>Projection Matrix &nbsp; $\mathbb{C}^2
                         \stackrel{\small (\textbf{Re}_1,\textbf{Im}_1,\textbf{Re}_2,\textbf{Im}_2)}{\longrightarrow}
@@ -204,7 +203,8 @@
                 </div>
 
             </div>
-        </div>
+
+        <div id="Surface-canvas"></div>
 
         <br>
         <br>
