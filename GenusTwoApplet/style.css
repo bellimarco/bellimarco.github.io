@@ -279,3 +279,21 @@ button.is-on:hover {
 #projectionMatrixTemplates button {
     padding: 6px;
 }
+
+
+
+
+
+#domain-frame {
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+#domain-canvas {
+    display: inline-flex;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}

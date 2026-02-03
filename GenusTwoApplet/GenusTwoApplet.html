@@ -112,7 +112,7 @@
                             $\omega_1 = \frac{dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
                         </div>
                         <div class="differentials">
-                            $\omega_2 = \frac{x\cdot dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
+                            $\omega_2 = \frac{x\; dx}{\sqrt{(1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2)}} $
                         </div>
                     </div>
                 </div>
@@ -204,7 +204,41 @@
 
             </div>
 
-        <div id="Surface-canvas"></div>
+        <div id="domain-frame">
+            <div style="align-items: center;">
+                <h4> The domain: a Riemann surface realized as two copies of the complex plane branched at the points  </h4>
+                <div>
+                    $Zm\kappa_2:=-\frac{1}{\kappa_2}$, &nbsp;&nbsp; $Zm\kappa_1:=-\frac{1}{\kappa_1}$, &nbsp;&nbsp; $Zm1:=-1$, &nbsp;&nbsp;
+                    $Z1:=1$, &nbsp;&nbsp; $Z\kappa_1:=\frac{1}{\kappa_1}$, &nbsp;&nbsp; $Z\kappa_2:=\frac{1}{\kappa_2}$
+                </div>
+                <p> 
+                    and compactified with two points at infinity, where the light green section meets the blue section, and the green section meets the light blue section as shown below.
+                    The gray lines represent segments of the surface where the branches switch between the top and bottom plane.
+                </p>
+                
+                <h4>Equivalently: a hyperelliptic plane curve of genus two realized as the zero locus</h4>
+                <div>
+                    $$ \{\, (x,y)\in\mathbb{C}^2 \,|\, y^2 = (1-x^2)(1-\kappa_1^2x^2)(1-\kappa_2^2x^2) \,\}  .$$
+                </div>
+
+                <p>The Abel-Jacobi embedding of this surface into its Jacobian is given by </p>
+                <div>
+                    $$ (x,y) \;\longrightarrow\; \left( \int_{(0,1)}^{(x,y)} \omega_1 \,,\, \int_{(0,1)}^{(x,y)} \omega_2  \right) \;\mathrm{mod}\, \Pi\cdot\mathbb{Z}^4 \,, $$
+                </div>
+                <p>
+                    where $\omega_1,\,\omega_2$ are the hyperelliptic differentials of first and second kind, and $\displaystyle \Pi$ is the period matrix $(\int_{\alpha_j}\omega_i)_{ij}$ with respect to the cycles
+                </p>
+                <div style="display:block; align-items:baseline;">
+                    <p style="display: inline;  color:orange">$ \alpha_1: Zm1 \xrightarrow{+} Z1 \xrightarrow{-} Zm1 $ </p> , &nbsp;&nbsp;
+                    <p style="display: inline;  color:lightgreen">$ \alpha_2: Zm\kappa_2 \xrightarrow{+} Zm\kappa_1 \xrightarrow{-} Zm\kappa_2 $ </p> , &nbsp;&nbsp;
+                    <p style="display: inline;  color:red">$ \alpha_3: Zm1 \xrightarrow{-} Zm\kappa_1 \xrightarrow{+} Zm1 $ </p> , &nbsp;&nbsp;
+                    <p style="display: inline;  color:green">$ \alpha_4: Z\kappa_2 \xrightarrow{-} Zm\kappa_2 \xrightarrow{+} Z\kappa_2  $ </p>.
+                </div>
+                <p> Removing the cycles $\alpha_1,\alpha_2,\alpha_3,\alpha_4$ from the domain, one obtains a simply connected Riemann surface which is mapped biholomorphically onto its image in the Jacobian. This image is visualized above when all periodicity values are set to 1. </p>
+                <p>The image of the simply connected Riemann surface under one single differential $\omega_1$ or $\omega_2$ is visualized by setting the projection of the above visualization to $\mathbb{C}^2\to\mathbb{C}\times\{0\}$ or $\mathbb{C}^2\to\{0\}\times\mathbb{C}$ repsectively. In the first case, one will recognize the familiar doubly periodic rectangular pattern in the complex plane traced by the elliptic differential of the first kind, as described in <i>[Stein&Shakarchi, Section 9.4.5]</i>.</p>
+            </div>
+            <div id="domain-canvas"></div>
+        </div>
 
         <br>
         <br>
