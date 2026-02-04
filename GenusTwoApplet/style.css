@@ -1,8 +1,6 @@
 body {
     font-family: sans-serif;
     text-align: center;
-    align-items:center;
-    justify-content: center;
 }
 table { margin: 0 auto; border-collapse: collapse; }
 td, th { border: 1px solid #333; padding: 4px 8px; }
@@ -56,16 +54,12 @@ button.is-on:hover {
 
 
 
-/* #canvas-frame {
-    display: inline-block;
-    padding: 5px;
-    margin:5px;
-    border: 1px solid #ddd;
-    background: #fafafa;
-    align-content: center;
-} */
+#main-div {
+    display: flex;
+    width:95%;
+    margin: 0 auto;
+}
 #Jacobian-canvas {
-    display: inline-flex;
     padding: 7px;
     margin: 5px;
     border: 2px solid #ddd;
@@ -80,8 +74,89 @@ button.is-on:hover {
 
 
 
+
+
+#controls-view{
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    text-align: center;
+    font-size: 14px;
+    justify-content: space-evenly;
+    align-items: center;
+}
+#controls-hint {
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    text-align: center;
+    font-size: 14px;
+    align-content: center;
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 4px 0;
+}
+
+.key {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+.controls-caption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.4;
+}
+
+#texture-loader {
+    display: flex;
+    align-items: center;
+}
+#btn-load-texture{
+    margin: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    /* max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; */
+}
+#btn-unload-texture {
+    width: 28px;
+    padding: 4px;
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+
+
+
+
 #period-frame{
     display: inline-flex;
+    vertical-align: top;
     padding: 5px;
     margin: 5px;
     border: 1px solid #ddd;
@@ -190,86 +265,9 @@ button.is-on:hover {
 
 
 
-#controls-view{
-    display: flex;
-    flex-direction: column;
-    margin: 5px;
-    padding: 5px;
-    border: 1px solid #ddd;
-    background: #f7f7f7;
-    text-align: center;
-    font-size: 14px;
-    justify-content: space-evenly;
-    align-items: center;
-}
-#controls-hint {
-    margin: 5px;
-    padding: 5px;
-    border: 1px solid #ddd;
-    background: #f7f7f7;
-    text-align: center;
-    font-size: 14px;
-    align-content: center;
-}
-
-.key-row {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin: 4px 0;
-}
-
-.key {
-    width: 32px;
-    height: 32px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    color: #333;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-}
-.controls-caption {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #555;
-    line-height: 1.4;
-}
-
-#texture-loader {
-    display: flex;
-    align-items: center;
-}
-#btn-load-texture{
-    margin: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-    /* max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap; */
-}
-#btn-unload-texture {
-    width: 28px;
-    padding: 4px;
-    font-weight: bold;
-}
-
-
-
-
-
 #projection-frame{
     display: inline-flex;
-    padding: 5px;
-    margin: 5px;
-    border: 1px solid #ddd;
-    background: #fafafa;
-}
-#projectionMatrix {
+    vertical-align: top;
     margin: 5px;
     padding: 5px;
     border: 1px solid #ddd;

@@ -543,7 +543,7 @@ function preload() {
 
 function setup() {
     winWidth = document.getElementById('Jacobian-canvas').offsetWidth-14;
-    winHeight = math.min(0.75*winWidth, document.getElementById('Jacobian-canvas').offsetHeight-14);
+    winHeight = math.max(0.4*winWidth, document.getElementById('Jacobian-canvas').offsetHeight-14);
     canvas = createCanvas(winWidth, winHeight, WEBGL).parent('Jacobian-canvas');
     // drawingContext.disable(drawingContext.DEPTH_TEST);
     
