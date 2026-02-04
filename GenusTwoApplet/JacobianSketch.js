@@ -556,9 +556,6 @@ function setup() {
 
     if(!IsTouchDevice){ addScreenPositionFunction(); }
 
-    if(!IsTouchDevice) surfacesTensorPeriodicityStart = [3,1,2,2];
-    else surfacesTensorPeriodicityStart = [2,1,1,2];
-
 
     if(runAnimation) projectAnimation.setup();
 
@@ -570,12 +567,18 @@ function setup() {
     }
     console.log(performanceMonitor);
 
+
     setupHyperellipticIntegrators();
     integralsArray = new IntegralsArray(parseFloat(k1Slider.value), parseFloat(k2Slider.value),true);
 
     updateProjectionMatrix(ProjectionTemplates.mixed);
-        
-    surfacesTensor = new SurfacesTensor(integralsArray,surfacesTensorPeriodStart,surfacesTensorPeriodicityStart, smoothingLevel);
+    
+    periodCounts = [0,0,0,0];
+    if(!IsTouchDevice) periodicityCounts = [3,1,2,2];
+    else periodicityCounts = [2,1,1,2];
+    for(let i=0; i<4; i++){ updatePeriodCounter(i); updatePeriodicityCounter(i); }
+
+    surfacesTensor = new SurfacesTensor(integralsArray,periodCounts,periodicityCounts, smoothingLevel);
     // surfacesTensor.updateProjection();  // computes projection vertices of newly generated surfaces
     surfacesTensor.print();
     console.log(surfacesTensor.Surfaces[0][0][0][0]);
@@ -672,8 +675,6 @@ const colors = {
 
 // ============= SURFACES =================
 let surfacesTensor;
-let surfacesTensorPeriodStart = [0,0,0,0];
-let surfacesTensorPeriodicityStart;
 let showVertexLabels = false;
 let showLineMeshes = false;
 let smoothingLevel = 2;
@@ -1568,12 +1569,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .addEventListener('click', () =>
             updateProjectionMatrix(ProjectionTemplates.C2)
         );
-
-
-
-    // if surfacesTensorPeriodStart are different from html at start
-    for(let i=0; i<4; i++){ updatePeriodCounter(i); updatePeriodicityCounter(i); }
-    
 });
 
 function toggleAnimation() {
@@ -1632,7 +1627,7 @@ function updateProjectionMatrix(newMatrix) {
     }
 }
 
-let periodCounts = surfacesTensorPeriodStart;
+let periodCounts;
 function periodPlus(i) {
     periodCounts[i]++;
     updatePeriodCounter(i);
@@ -1647,7 +1642,7 @@ function updatePeriodCounter(i) {
     document.getElementById(`periodCount${i}`).innerText = periodCounts[i];
 }
 
-let periodicityCounts = surfacesTensorPeriodicityStart;
+let periodicityCounts;
 let periodicityWarning = false;
 function periodicityPlus(i) {
     if(!periodicityWarning &&
