@@ -10,145 +10,17 @@ let fontBold;
 let fontSize = 10;
 
 
-let TextureImage = null;
-let textureLoadFailTimer = null;
-function shortenFileName(filename, maxLength = 10) {
-    if (filename.length <= maxLength) return filename;
-    const extIndex = filename.lastIndexOf('.');
-    const ext = extIndex >= 0 ? filename.slice(extIndex) : '';
-    const base = filename.slice(0, maxLength - ext.length - 1); // leave space for "…"
-    return base + '…' + ext;
-}
-
-function onTextureLoaded(filename, imageFile) {
-    const btn = document.getElementById("btn-load-texture");
-    const del = document.getElementById("btn-unload-texture");
-
-    btn.textContent =  shortenFileName(filename, 20); // truncate if too long;
-    btn.classList.add("is-on");
-
-    btn.style.fontSize = math.ceil((14* math.min(1,(12/ btn.textContent.length)))) +"px";
-
-    del.style.display = "inline-block";
-
-    TextureImage = imageFile;
-
-    if(surfacesTensor){
-        surfacesTensor.updateTexture(true,TextureImage);
-    }
-}
-function unloadTexture() {
-    customTexture = null;
-
-    const btn = document.getElementById("btn-load-texture");
-    const del = document.getElementById("btn-unload-texture");
-    const input = document.getElementById("texture-file-input");
-
-    btn.textContent = "Load texture";
-    btn.classList.remove("is-on");
-    btn.style.fontSize = "";
-
-    del.style.display = "none";
-    input.value = ""; // allow reloading same file
-
-    if(surfacesTensor){
-        surfacesTensor.updateTexture(false);
-    }
-}
-function onTextureLoadFailed(error,file) {
-    console.error("p5 loadImage failed", error);
-    alert("Failed to load image: " + file.name +". \nPlease try another file.");
-}
-function openTextureDialog() {
-    document.getElementById("texture-file-input").click();
-    document
-    .getElementById("texture-file-input")
-    .addEventListener("change", function (event) {
-
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onerror = () => { console.error("FileReader error while reading texture file"); reader.abort(); };
-        reader.onabort = () => { console.warn("FileReader aborted"); };
-        reader.onload = (e) => {
-            let imageLoadSuccess = false;
-            loadImage(
-                e.target.result,
-                imageFile => { // SUCCESS
-                    if(!imageLoadSuccess){
-                        imageLoadSuccess = true;
-                        onTextureLoaded(file.name, imageFile);
-                    }
-                },
-                error => { // FAILURE (may be called multiple times)
-                    if (imageLoadSuccess) return; // if one of the last tries was a success
-                    textureLoadFailTimer = setTimeout(() => {
-                        if (imageLoadSuccess) return;
-                        onTextureLoadFailed(error,file);
-                    }, 500); // debounce window
-                }
-            );
-
-        };
-        reader.readAsDataURL(file);
-    });
-}
 
 
 
-
-
-
-
-// ============ p5.js interaction ======================================
-
-function mouseInsideCanvas() {
-    const rect = canvas.elt.getBoundingClientRect();
-    return (
-        mouseX >= 0 && mouseX <= width &&
-        mouseY >= 0 && mouseY <= height
-    );
-}
-
-let scaleCamera = 1.0;
-function mouseWheel() {
-    // only handle if mouse started on canvas
-    if (!mouseInsideCanvas()) return;
-
-    scaleCamera *= (1 - event.deltaY * 0.001);
-    scaleCamera = constrain(scaleCamera, 0.2, 5);  // prevent inversion / disappearance
-
-    return false; // absorb event (safe?)
-}
-
-let lastMouseX, lastMouseY; //dragging variables
-let dragging = false;
-function mousePressed() {
-     // only handle if mouse started on canvas
-    if (!mouseInsideCanvas()) return;
-
-    if(showAxes){ updateAxis4Gizmo(); }
-    if (!hoveringAxis4){ dragging = true; }
-    else{ draggingAxis4 = true; }
-
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-    return false; // absorb event (safe?)
-}
-function mouseReleased() {
-    draggingAxis4 = false;
-    dragging = false;
-}
-
+// ============= camera work ==========================
 let panX = 0; //camera translation
 let panY = 0;
 let panZ = 0;
 let rotX = 0; //camera rotation
 let rotY = 0;
 let rotZ = 0;
-
+let scaleCamera = 1.0;
 function showFocus(){
     push();
     translate(0,0,0);
@@ -162,47 +34,44 @@ function showFocus(){
     sphere(10);
     pop();
 }
-
-function mouseDragged() {
-    let dx = mouseX - lastMouseX;
-    let dy = mouseY - lastMouseY;
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-    if (draggingAxis4) {
-        // screen-space → world-space heuristic
-        axis4Dir = [axis4Dir[0]+dx*0.001,axis4Dir[1]-dy*0.001,axis4Dir[2]];
-        axis4Dir = scaleVec(axisDirMagn/math.sqrt(axis4Dir[0]**2+axis4Dir[1]**2+axis4Dir[2]**2), axis4Dir);
-        // axis4Dir[0] = axis4Dir[0].toPrecision(3);
-        // axis4Dir[1] = axis4Dir[1].toPrecision(3);
-        // axis4Dir[2] = axis4Dir[2].toPrecision(3);
-        M = [
-            [ProjectionMatrix[0][0],ProjectionMatrix[0][1],ProjectionMatrix[0][2],axis4Dir[0]],
-            [ProjectionMatrix[1][0],ProjectionMatrix[1][1],ProjectionMatrix[1][2],axis4Dir[1]],
-            [ProjectionMatrix[2][0],ProjectionMatrix[2][1],ProjectionMatrix[2][2],axis4Dir[2]]
-        ];
-        updateProjectionMatrix(M);
-
-        return false; // absorb DOM event
+// ----------- stroll centering functionality ------------
+let strollCentering = true; // wether centerToSurface() should not directly affect panX,panY, but stroll to it smoothly
+let strollCenteringDamping = 0.12;
+let centerX = 0;
+let centerY = 0;
+let centerZ = 0;
+function centerToSurface(S){
+    let center;
+    if(S instanceof Surface){
+        const surface = S;
+        center = screenMap(projectionMap([surface.Bounds.Re1center,surface.Bounds.Im1center,surface.Bounds.Re2center,surface.Bounds.Im2center]));
     }
-    else if(dragging){
-        if (keyIsDown(SHIFT)) {
-            // ROTATE camera
-            rotY += dx * 0.005;
-            rotX += -dy * 0.005;
-        } else {
-            // PAN camera (move in camera plane)
-            panX += dx;
-            panY += dy;
-            centerX = panX;
-            centerY = panY;
-        }
-        return false; // absorb DOM event
+    if(S instanceof SurfacesTensor){
+        let d1 = [math.floor((S.periodicityCounts[0]-1)/2), math.floor((S.periodicityCounts[1]-1)/2), math.floor((S.periodicityCounts[2]-1)/2), math.floor((S.periodicityCounts[3]-1)/2)];
+        let d2 = [math.ceil((S.periodicityCounts[0]-1)/2), math.ceil((S.periodicityCounts[1]-1)/2), math.ceil((S.periodicityCounts[2]-1)/2), math.ceil((S.periodicityCounts[3]-1)/2)];
+
+        const surface1 = S.Surfaces[d1[0]][d1[1]][d1[2]][d1[3]];
+        const surface2 = S.Surfaces[d2[0]][d2[1]][d2[2]][d2[3]];
+        const c1 =  screenMap(projectionMap([surface1.Bounds.Re1center,surface1.Bounds.Im1center,surface1.Bounds.Re2center,surface1.Bounds.Im2center]));
+        const c2 =  screenMap(projectionMap([surface2.Bounds.Re1center,surface2.Bounds.Im1center,surface2.Bounds.Re2center,surface2.Bounds.Im2center]));
+        center = [0.5*(c1[0]+c2[0]), 0.5*(c1[1]+c2[1]), 0.5*(c1[2]+c2[2])];
     }
-    return true; // if didn't start dragging over canvas, release drag event
+    if(strollCentering){ centerX = -center[0]; centerY = -center[1]; centerZ = -center[2]; }
+    else{ panX = -center[0]; panY = -center[1]; panZ = -center[2]; }
+}
+function updateStrollCentering(){
+    panX += (centerX-panX)*strollCenteringDamping;
+    panY += (centerY-panY)*strollCenteringDamping;
+    panZ += (centerZ-panZ)*strollCenteringDamping;
 }
 
 
 
+
+// ============ p5.js interaction ======================================
+
+
+// ------------ keyboard controls ----------------
 const translationControlsSpeed = 10;
 const rotationControlsSpeed = 0.08;
 function updateKeyIsDown(){
@@ -264,6 +133,79 @@ function keyPressed() {
     }
 }
 
+// ------------ mouse controls ----------------
+function mouseInsideCanvas() {
+    const rect = canvas.elt.getBoundingClientRect();
+    return (
+        mouseX >= 0 && mouseX <= width &&
+        mouseY >= 0 && mouseY <= height
+    );
+}
+let lastMouseX, lastMouseY; //dragging variables
+let dragging = false;
+function mousePressed() {
+     // only handle if mouse started on canvas
+    if (!mouseInsideCanvas()) return;
+
+    if(showAxes){ updateAxis4Gizmo(); }
+    if (!hoveringAxis4){ dragging = true; }
+    else{ draggingAxis4 = true; }
+
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+    return false; // absorb event (safe?)
+}
+function mouseReleased() {
+    draggingAxis4 = false;
+    dragging = false;
+}
+function mouseDragged() {
+    let dx = mouseX - lastMouseX;
+    let dy = mouseY - lastMouseY;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+    if (draggingAxis4) {
+        // screen-space → world-space heuristic
+        axis4Dir = [axis4Dir[0]+dx*0.001,axis4Dir[1]-dy*0.001,axis4Dir[2]];
+        axis4Dir = scaleVec(axisDirMagn/math.sqrt(axis4Dir[0]**2+axis4Dir[1]**2+axis4Dir[2]**2), axis4Dir);
+        // axis4Dir[0] = axis4Dir[0].toPrecision(3);
+        // axis4Dir[1] = axis4Dir[1].toPrecision(3);
+        // axis4Dir[2] = axis4Dir[2].toPrecision(3);
+        M = [
+            [ProjectionMatrix[0][0],ProjectionMatrix[0][1],ProjectionMatrix[0][2],axis4Dir[0]],
+            [ProjectionMatrix[1][0],ProjectionMatrix[1][1],ProjectionMatrix[1][2],axis4Dir[1]],
+            [ProjectionMatrix[2][0],ProjectionMatrix[2][1],ProjectionMatrix[2][2],axis4Dir[2]]
+        ];
+        updateProjectionMatrix(M);
+
+        return false; // absorb DOM event
+    }
+    else if(dragging){
+        if (keyIsDown(SHIFT)) {
+            // ROTATE camera
+            rotY += dx * 0.005;
+            rotX += -dy * 0.005;
+        } else {
+            // PAN camera (move in camera plane)
+            panX += dx;
+            panY += dy;
+            centerX = panX;
+            centerY = panY;
+        }
+        return false; // absorb DOM event
+    }
+    return true; // if didn't start dragging over canvas, release drag event
+}
+function mouseWheel() {
+    // only handle if mouse started on canvas
+    if (!mouseInsideCanvas()) return;
+
+    scaleCamera *= (1 - event.deltaY * 0.001);
+    scaleCamera = constrain(scaleCamera, 0.2, 5);  // prevent inversion / disappearance
+
+    return false; // absorb event (safe?)
+}
+
 
 
 
@@ -273,7 +215,6 @@ let lastTouchX = 0;
 let lastTouchY = 0;
 let lastPinchDist = null;
 let lastTwoFingerCenter = null;
-
 let IsTouchDevice = false; // detected in setup
 function touchInsideCanvas(touch) {
     const rect = canvas.elt.getBoundingClientRect();
@@ -317,7 +258,6 @@ function touchStarted() {
     }
     return false; // absorb event
 }
-
 function touchMoved() {
     if (touches.length === 0) return true;
     // if (!IsTouchDevice()) return true;
@@ -349,7 +289,6 @@ function touchMoved() {
     }
     return false; // absorb event
 }
-
 function touchEnded() {
     lastPinchDist = null;
     lastTwoFingerCenter = null;
@@ -364,50 +303,30 @@ function touchEnded() {
 
 
 
-
 // ============ Coordinate mappings ======================================
 
-// complex 2-vector operations
-function addVec(v,w){
-    return [math.add(v[0],w[0]), math.add(v[1],w[1])];
-}
-function subVec(v,w){
-    return [math.add(v[0],math.multiply(-1,w[0])), math.add(v[1],math.multiply(-1,w[1]))];
-}
-function scaleVec(k,v){
-    return [k*v[0],k*v[1],k*v[2]];
-}
-function multVec(M, v) {
-    if (M.length === 0) return [];
-
-    const rows = M.length;
-    const cols = M[0].length;
-
-    if (v.length !== cols) {
-        throw new Error("Matrix/vector size mismatch");
-    }
-
-    let result = new Array(rows);
-
-    for (let i = 0; i < rows; i++) {
-        let sum = 0;
-        for (let j = 0; j < cols; j++) {
-            sum = math.add(sum, math.multiply(M[i][j], v[j]));
-        }
-        result[i] = sum;
-    }
-
-    return result;
-}
-
-
-// mapping from Euclidean R^3 to screen pixel coordinates
+// -------------- from R^3 to screen pixels ----------------
 let scaleFactor=40; // pixels per unit length
 let ScreenMatrix = [
     [scaleFactor, 0, 0],
     [0, -scaleFactor, 0],
     [0, 0, -scaleFactor]
 ];
+function screenMap(Z){
+    // Z vector in R^3
+    // let P = [];
+    // for (let i=0; i<3; i++){
+    //     let sum = 0;
+    //     for (let j=0; j<3; j++){
+    //         sum = math.add(sum, math.multiply(ScreenMatrix[i][j], Z[j]));
+    //     }
+    //     P.push(sum);
+    // }
+    // return P;
+
+    //assuming ScreenMatrix is diagonal
+    return [Z[0]*ScreenMatrix[0][0],Z[1]*ScreenMatrix[1][1], Z[2]*ScreenMatrix[2][2]];
+}
 function updateScale(k){
     scaleFactor=k;
     ScreenMatrix =
@@ -427,55 +346,8 @@ function fitScaleToSurface(S){
     updateScale(k);
 }
 
-let centerX = 0;
-let centerY = 0;
-let centerZ = 0;
-let strollCentering = true; // wether centerToSurface() should not directly affect panX,panY, but stroll to it smoothly
-let strollCenteringDamping = 0.12;
-
-function centerToSurface(S){
-    let center;
-    if(S instanceof Surface){
-        const surface = S;
-        center = screenMap(projectionMap([surface.Bounds.Re1center,surface.Bounds.Im1center,surface.Bounds.Re2center,surface.Bounds.Im2center]));
-    }
-    if(S instanceof SurfacesTensor){
-        let d1 = [math.floor((S.periodicityCounts[0]-1)/2), math.floor((S.periodicityCounts[1]-1)/2), math.floor((S.periodicityCounts[2]-1)/2), math.floor((S.periodicityCounts[3]-1)/2)];
-        let d2 = [math.ceil((S.periodicityCounts[0]-1)/2), math.ceil((S.periodicityCounts[1]-1)/2), math.ceil((S.periodicityCounts[2]-1)/2), math.ceil((S.periodicityCounts[3]-1)/2)];
-
-        const surface1 = S.Surfaces[d1[0]][d1[1]][d1[2]][d1[3]];
-        const surface2 = S.Surfaces[d2[0]][d2[1]][d2[2]][d2[3]];
-        const c1 =  screenMap(projectionMap([surface1.Bounds.Re1center,surface1.Bounds.Im1center,surface1.Bounds.Re2center,surface1.Bounds.Im2center]));
-        const c2 =  screenMap(projectionMap([surface2.Bounds.Re1center,surface2.Bounds.Im1center,surface2.Bounds.Re2center,surface2.Bounds.Im2center]));
-        center = [0.5*(c1[0]+c2[0]), 0.5*(c1[1]+c2[1]), 0.5*(c1[2]+c2[2])];
-    }
-    if(strollCentering){ centerX = -center[0]; centerY = -center[1]; centerZ = -center[2]; }
-    else{ panX = -center[0]; panY = -center[1]; panZ = -center[2]; }
-}
-function updateStrollCentering(){
-    panX += (centerX-panX)*strollCenteringDamping;
-    panY += (centerY-panY)*strollCenteringDamping;
-    panZ += (centerZ-panZ)*strollCenteringDamping;
-}
-
-function screenMap(Z){
-    // Z vector in R^3
-    // let P = [];
-    // for (let i=0; i<3; i++){
-    //     let sum = 0;
-    //     for (let j=0; j<3; j++){
-    //         sum = math.add(sum, math.multiply(ScreenMatrix[i][j], Z[j]));
-    //     }
-    //     P.push(sum);
-    // }
-    // return P;
-
-    //assuming ScreenMatrix is diagonal
-    return [Z[0]*ScreenMatrix[0][0],Z[1]*ScreenMatrix[1][1], Z[2]*ScreenMatrix[2][2]];
-}
-
-// Unit vector in R^3 giving direction of 4th axis
-let axis4Dir = [0,0.2,0.5];
+// -------------- Projection from R^4 to R^3 --------------
+let axis4Dir = [0,0.2,0.5]; // Unit vector in R^3 giving direction of 4th axis
 const axisDirMagn = math.sqrt(axis4Dir[0]**2+axis4Dir[1]**2+axis4Dir[2]**2);
 const axis4DirScale = 5;
 const AXIS4_RADIUS = 20;
@@ -505,7 +377,6 @@ function updateAxis4Gizmo() {
     sphere(5);
     pop();
 }
-
 // Projection C^2 = R^4 -> R^3 
 const ProjectionTemplates = {
     mixed: [
@@ -550,6 +421,7 @@ function projectionMap(z){
 
 
 
+
 // ============= ANIMATION =============================
 
 
@@ -562,14 +434,18 @@ function STEP(delta,epsilon,t){
     else if(0<=t && t<delta) return t/delta*epsilon;
     else return epsilon;
 }
+
 const animation_TEMPLATE = {
-    fps: 22, //update rate of animation, indipendent of sketch
+    fpsRange: [8,FPS*0.9], //update rate of animation, indipendent of sketch
     frameFrequency: null, // canvas FPS divided by desired fps of animation
     precision: 4, // used in .toPrecision()
     period: 20, // time in seconds of a period of the cyclic animation
     t0: 0, // start time
+    setFPS: (fps)=>{
+        animation_TEMPLATE.frameFrequency = FPS/fps;
+    },
     setup:  ()=>{
-        animation_TEMPLATE.frameFrequency = FPS/animation_TEMPLATE.fps;
+        animation_TEMPLATE.setFPS(animation_TEMPLATE.fpsRange[1]);
     },
     // input time in seconds
     draw: (t)=>{
@@ -636,15 +512,15 @@ const animation_MYSELF = {
 
         panY = project.OLDPANY+STEP(project.period/2,50,t-project.t2);
     }
-};
+}
 
+let autoFocus = true;
+let runAnimation = true;
+const projectAnimation = animation_TEMPLATE; // make up your own animation !
+let animationLastFrameCount = 0; // tracker for rendering animation at its own fps
 
-
-
-
-
-
-
+let performanceMonitor; // instantiated in setup
+let autoShowEdges = true; // turned off when performance is low, and not turned back on again
 
 
 
@@ -655,22 +531,6 @@ const animation_MYSELF = {
 
 
 // ==================== p5.js EXECUTION =============================
-
-let surfacesTensor;
-const surfacesTensorPeriodStart = [0,0,0,0];
-const surfacesTensorPeriodicityStart = [3,1,2,2];
-
-const vertexToTextOffset = [-4,-4,0];
-
-let runAnimation = true;
-let autoFocus = true;
-const projectAnimation = animation_TEMPLATE; // make up your own animation !
-let animationLastFrameCount = 0; // tracker for rendering animation at its own fps
-
-let showAxes = true;
-let showVertexLabels = false;
-let showLineMeshes = false;
-let smoothingLevel = 2;
 
 function preload() {
     font = loadFont(
@@ -689,7 +549,7 @@ function setup() {
     
     setTimeout(()=>{
         IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
-    },500);
+    },50);
 
     textureMode(NORMAL); // important for correct uv texture coordinate 0<u,v<1
     frameRate(FPS);
@@ -698,15 +558,15 @@ function setup() {
 
     if(!IsTouchDevice){ addScreenPositionFunction(); }
 
-    // mouse events captured only when mouse is hovering the canvas:
-    // canvas.mousePressed(CanvasMousePressed);
-    // canvas.mouseReleased(CanvasMouseReleased); // set globally
-    // canvas.mouseWheel(CanvasMouseWheel);
-    // canvas.mouseDragged(CanvasMouseDragged); // set globally
-    //canvas.keyIsDown(CanvasKeyPressed);
-    // canvas.touchStarted(CanvasTouchStarted); //set globally
-    // canvas.touchEnded(CanvasTouchEnded);
-    // canvas.touchMoved(CanvasTouchMoved);
+    if(runAnimation) projectAnimation.setup();
+
+    performanceMonitor = new PerformanceMonitor(FPS*0.95);
+    performanceMonitor.tierCallback = (tierRatio)=>{
+        // animation fps gets lower with power of performance tier
+        if(runAnimation) projectAnimation.setFPS(projectAnimation.fpsRange[0]
+             + (projectAnimation.fpsRange[1]-projectAnimation.fpsRange[0]) * (tierRatio**3) );
+    }
+    console.log(performanceMonitor);
 
     setupHyperellipticIntegrators();
     integralsArray = new IntegralsArray(parseFloat(k1Slider.value), parseFloat(k2Slider.value),true);
@@ -714,7 +574,7 @@ function setup() {
     updateProjectionMatrix(ProjectionTemplates.mixed);
         
     surfacesTensor = new SurfacesTensor(integralsArray,surfacesTensorPeriodStart,surfacesTensorPeriodicityStart, smoothingLevel);
-    surfacesTensor.updateProjection();  // computes projection vertices of newly generated surfaces
+    // surfacesTensor.updateProjection();  // computes projection vertices of newly generated surfaces
     surfacesTensor.print();
     console.log(surfacesTensor.Surfaces[0][0][0][0]);
     
@@ -724,16 +584,14 @@ function setup() {
     centerToSurface(surfacesTensor); // changes camera position 
     fitAxesToSurface(surfacesTensor);
     
-    // if surfacesTensorPeriodStart are different from html at start
-    for(let i=0; i<4; i++){ updatePeriodCounter(i); updatePeriodicityCounter(i); }
-    
-
     // surfacesTensor.updateTexture(true, TextureImage); // preloaded image
-
-    if(runAnimation) projectAnimation.setup();
 }
 
 function draw() {
+
+    performanceMonitor.update();
+
+
     background(255);
 
     // translation commands also change centerX,centerY
@@ -755,16 +613,24 @@ function draw() {
 
     if(showAxes && !runAnimation && !IsTouchDevice){ updateAxis4Gizmo(); }
     
+
     if(runAnimation && ( animationLastFrameCount + projectAnimation.frameFrequency < frameCount )){
-        animationLastFrameCount = frameCount;
-        projectAnimation.draw(frameCount/FPS);
+        animationLastFrameCount += projectAnimation.frameFrequency;
+        projectAnimation.draw(millis()/1000);
     }
 
     surfacesTensor.display();
-    if(!surfacesTensor.showTexture || showLineMeshes){ surfacesTensor.displayEdges(scaleFactor*0.06); }
-    if(showLineMeshes) surfacesTensor.displayMesh(scaleFactor*0.05,showVertexLabels);
+    if(showLineMeshes){
+        surfacesTensor.displayMesh(scaleFactor*0.05,showVertexLabels);
+    }
+
+    if(showLineMeshes || (!surfacesTensor.showTexture && autoShowEdges)){
+        if(performanceMonitor.getTierRatio()<0.6) autoShowEdges = false;
+        surfacesTensor.displayEdges(scaleFactor*0.06);
+    }
 
     if(showAxes){ drawAxes(true); }
+
 }
 
 
@@ -776,12 +642,7 @@ function draw() {
 
 
 
-
-
-
-// ===== CLASSES =====
-
-
+// ======= COLOR PALETTE ===========
 const colors = {
         O:   "#ff9300",
         Z1: "#ff2600",
@@ -809,6 +670,18 @@ const colors = {
         'Inf+': "#6b1cfd",
         'Inf-': "#6b1cfd",
 };
+
+
+
+// ============= SURFACES =================
+let surfacesTensor;
+const surfacesTensorPeriodStart = [0,0,0,0];
+const surfacesTensorPeriodicityStart = [3,1,2,2];
+let showVertexLabels = false;
+let showLineMeshes = false;
+let smoothingLevel = 2;
+const vertexToTextOffset = [-4,-4,0]; // in pixels, for display of vertex labels
+
 
 // array of pairs of vertex names, and vertex name of desired color
 const sectionLineMesh = [
@@ -868,18 +741,18 @@ class Surface {
         // bounds in R^4 of the vertices of the surface
         this.Bounds = {}
 
-        this.ProjectedVertices = {}; // this.Vertices projected to R^3
+        // this.ProjectedVertices = {}; // this.Vertices projected to R^3
         this.ScreenVertices = {}; // R^3 vectors transformed to 3d pixel coordinates
         this.UVVertices = {}; // R^3 vectors transformed to 2d uv coordinates for textures
         for(const section in this.Vertices){
-            this.ProjectedVertices[section]={};
+            // this.ProjectedVertices[section]={};
             this.ScreenVertices[section]={};
             this.UVVertices[section]={};
         }
 
         // points added instead of 'O' and 'Inf' along two parabolas to show a more faithful approximation of the curve
         this.VerticesSmoothed = {};
-        this.ProjectedVerticesSmoothed = {}; // as above but for this.Vertices Smoothed
+        // this.ProjectedVerticesSmoothed = {}; // as above but for this.Vertices Smoothed
         this.ScreenVerticesSmoothed = {};
         this.UVVerticesSmoothed = {};
 
@@ -925,12 +798,11 @@ class Surface {
     }
 
     uvMap(z){
-        // translate C^2 vector to fundamental period
-        let Z = subVec(z,multVec(this.integrals.PeriodMatrix,this.periodCounts));
+        // z is assumed to be a complex 2-vector on the surface in the fundamental domain of period counts [0,0,0,0]
         // normalize 1st complex coordinate to the square [0,1]xi[0,1]
-        let Z1 = math.add(Z[0],this.integrals.At1[0]);
+        let Z1 = math.add(z[0],this.integrals.At1[0]);
         let uv = [
-            Z1.re/(this.integrals.PeriodMatrix[0][0].re) * 7/8,  // 7/8 factor to center the Aguadeno image
+            Z1.re/(this.integrals.PeriodMatrix[0][0].re),  // 7/8 factor to center the Aguadeno image
             1 - Z1.im/(-this.integrals.PeriodMatrix[0][2].im) ]; // v coordinate is inverted
         //console.log(Z1.re, Z1.im, this.integrals.PeriodMatrix[0][0].re,this.integrals.PeriodMatrix[0][2].im,uv);
         return uv;
@@ -1017,7 +889,7 @@ class Surface {
                     this.VerticesSmoothed[section]['Inf'+i] = addVec(this.Vertices[section]['Inf'], [math.multiply(interpol[i+this.smoothing]**2,VO[0]), math.multiply(interpol[i+this.smoothing],VO[1])]);
                 }
 
-                this.ProjectedVerticesSmoothed[section] = {};
+                // this.ProjectedVerticesSmoothed[section] = {};
                 this.ScreenVerticesSmoothed[section] = {};
                 this.UVVerticesSmoothed[section] = {};
             }
@@ -1106,30 +978,40 @@ class Surface {
             } 
         }
 
-        if(this.showTexture) this.updateUV();
+        this.updateUV();
     }
 
-    updateProjection(){
-        for (const section in this.Vertices) {
-            for (const vertex in this.Vertices[section]) {
-                this.ProjectedVertices[section][vertex] = projectionMap(addVec(this.periodDisplacement, this.Vertices[section][vertex]));
-            }
-            if(this.showSmoothing){
-                for (const vertex in this.VerticesSmoothed[section]) {
-                    this.ProjectedVerticesSmoothed[section][vertex] = projectionMap(addVec(this.periodDisplacement, this.VerticesSmoothed[section][vertex]));
-                }
-            }
-        }
-    }
+    // updateProjection(){
+    //     for (const section in this.Vertices) {
+    //         for (const vertex in this.Vertices[section]) {
+    //             this.ProjectedVertices[section][vertex] = projectionMap(addVec(this.periodDisplacement, this.Vertices[section][vertex]));
+    //         }
+    //         if(this.showSmoothing){
+    //             for (const vertex in this.VerticesSmoothed[section]) {
+    //                 this.ProjectedVerticesSmoothed[section][vertex] = projectionMap(addVec(this.periodDisplacement, this.VerticesSmoothed[section][vertex]));
+    //             }
+    //         }
+    //     }
+    // }
     
     updateScreen(){
+        // for (const section in this.Vertices) {
+        //     for (const vertex in this.Vertices[section]) {
+        //         this.ScreenVertices[section][vertex] = screenMap(this.ProjectedVertices[section][vertex]);
+        //     }
+        //     if(this.showSmoothing){
+        //         for (const vertex in this.VerticesSmoothed[section]) {
+        //             this.ScreenVerticesSmoothed[section][vertex] = screenMap(this.ProjectedVerticesSmoothed[section][vertex]);
+        //         }
+        //     }
+        // }
         for (const section in this.Vertices) {
             for (const vertex in this.Vertices[section]) {
-                this.ScreenVertices[section][vertex] = screenMap(this.ProjectedVertices[section][vertex]);
+                this.ScreenVertices[section][vertex] = screenMap(projectionMap(addVec(this.periodDisplacement, this.Vertices[section][vertex])));
             }
             if(this.showSmoothing){
                 for (const vertex in this.VerticesSmoothed[section]) {
-                    this.ScreenVerticesSmoothed[section][vertex] = screenMap(this.ProjectedVerticesSmoothed[section][vertex]);
+                    this.ScreenVerticesSmoothed[section][vertex] = screenMap(projectionMap(addVec(this.periodDisplacement, this.VerticesSmoothed[section][vertex])));
                 }
             }
         }
@@ -1272,8 +1154,9 @@ class Surface {
         pop();
     }
 
-    // translate all vertices by a vector of 2 complex coordinates
     translate(v){
+        // not used anymore
+        // translate all vertices by a vector of 2 complex coordinates
         for(const section in this.Vertices){
             for(const vertex in this.Vertices[section]){
                 this.Vertices[section][vertex] = addVec(v, this.Vertices[section][vertex]);
@@ -1293,8 +1176,6 @@ class Surface {
         }
         this.Bounds.Re1center += v[0].re; this.Bounds.Re2center += v[1].re;
         this.Bounds.Im1center += v[0].im; this.Bounds.Im2center += v[1].im;
-        // this.updateProjection();
-        // this.updateScreen();
     }
 
     updatePeriodCounts(counts, updateGraphics = false){
@@ -1323,16 +1204,16 @@ class Surface {
         if(updateGraphics){
             // updateProjection and updateScreen can be done more efficiently by directly translating
             v = projectionMap(v);
-            for (const section in this.ProjectedVertices) {
-                for (const vertex in this.ProjectedVertices[section]) {
-                    this.ProjectedVertices[section][vertex] = addVec(v, this.ProjectedVertices[section][vertex]);
-                }
-                if(this.showSmoothing){
-                    for (const vertex in this.ProjectedVerticesSmoothed[section]) {
-                        this.ProjectedVerticesSmoothed[section][vertex] = addVec(v, this.ProjectedVerticesSmoothed[section][vertex]);
-                    }
-                }
-            }
+            // for (const section in this.ProjectedVertices) {
+            //     for (const vertex in this.ProjectedVertices[section]) {
+            //         this.ProjectedVertices[section][vertex] = addVec(v, this.ProjectedVertices[section][vertex]);
+            //     }
+            //     if(this.showSmoothing){
+            //         for (const vertex in this.ProjectedVerticesSmoothed[section]) {
+            //             this.ProjectedVerticesSmoothed[section][vertex] = addVec(v, this.ProjectedVerticesSmoothed[section][vertex]);
+            //         }
+            //     }
+            // }
             v = screenMap(v);
             for (const section in this.ScreenVertices) {
                 for (const vertex in this.ScreenVertices[section]) {
@@ -1373,7 +1254,6 @@ class SurfacesTensor {
     
     iterate(func){
         for(let i1=0; i1<this.periodicityCounts[0]; i1++){
-            if(this.Surfaces.length)
             for(let i2=0; i2<this.periodicityCounts[1]; i2++){
                 for(let i3=0; i3<this.periodicityCounts[2]; i3++){
                     for(let i4=0; i4<this.periodicityCounts[3]; i4++){
@@ -1399,10 +1279,6 @@ class SurfacesTensor {
     }
 
     updateSmoothing(value){
-        // if(value && !this.showSmoothing){
-        //     this.showSmoothing = (value?true:false);
-
-        // }
         this.iterate((surface)=>{
             surface.updateSmoothing(value);
         });
@@ -1410,10 +1286,6 @@ class SurfacesTensor {
     }
 
     updateTexture(value, file){
-        // if(value && !this.showSmoothing){
-        //     this.showSmoothing = (value?true:false);
-
-        // }
         this.iterate((surface)=>{
             surface.updateTexture(value,file);
         });
@@ -1421,12 +1293,12 @@ class SurfacesTensor {
         if(file){ this.textureFile = file; }
     }
 
-    updateProjection(){
-        this.reduce();  // if projection changes, old surfaces in the tensor might be out of place
-        this.iterate((surface)=>{
-            surface.updateProjection();
-        })
-    }
+    // updateProjection(){
+    //     this.reduce();  // if projection changes, old surfaces in the tensor might be out of place
+    //     this.iterate((surface)=>{
+    //         surface.updateProjection();
+    //     })
+    // }
     updateScreen(){
         this.reduce();  // if scale changes, old surfaces in the tensor might be out of place
         this.iterate((surface)=>{
@@ -1479,7 +1351,7 @@ class SurfacesTensor {
                     for(let i4=0; i4<this.periodicityCounts[3]; i4++){
                         let S = this.Surfaces[i1][i2][i3][i4];
                         S.updatePeriodCounts([i1+this.periodCounts[0],i2+this.periodCounts[1],i3+this.periodCounts[2],i4+this.periodCounts[3]]);
-                        if(updateGraphics) S.updateProjection();
+                        // if(updateGraphics) S.updateProjection();
                         //if(this.showTexture) S.updateTexture(this.showTexture,this.textureFile);
                     }
                 }
@@ -1506,7 +1378,7 @@ class SurfacesTensor {
                         if(this.Surfaces[i1][i2][i3].length-1<i4){
                             let S = new Surface(this.integrals,this.smoothing);
                             S.updatePeriodCounts([i1+this.periodCounts[0],i2+this.periodCounts[1],i3+this.periodCounts[2],i4+this.periodCounts[3]]);
-                            if(updateGraphics) S.updateProjection();
+                            // if(updateGraphics) S.updateProjection();
                             if(this.showTexture) S.updateTexture(this.showTexture,this.textureFile);
                             this.Surfaces[i1][i2][i3].push(S);
                         }
@@ -1551,6 +1423,7 @@ function displayEdge(start, end, size, color = [120,120,120]){
     pop();
 }
 
+let showAxes = true;
 // range of axes in the 2 complex coordinates, fitted to a surface
 let fitAxes = {
     Re1range : [-1,1],
@@ -1642,10 +1515,7 @@ function drawAxes(fit = false) {
 
 
 
-
 // ==================== DOM CONTROL =================================
-
-
 document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("btn-animation")
@@ -1663,8 +1533,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-axes")
         .classList.toggle("is-on", showAxes);
 
-    
-        // building Projection Matrix
+    // building Projection Matrix
     const table = document.getElementById('projectionMatrixTable');
     table.innerHTML = '';
     for (let i = 0; i < ProjectionMatrix.length; i++) {
@@ -1701,9 +1570,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('projC2')
         .addEventListener('click', () =>
             updateProjectionMatrix(ProjectionTemplates.C2)
-        ); 
-});
+        );
 
+
+
+    // if surfacesTensorPeriodStart are different from html at start
+    for(let i=0; i<4; i++){ updatePeriodCounter(i); updatePeriodicityCounter(i); }
+    
+});
 
 function toggleAnimation() {
     runAnimation = !runAnimation;
@@ -1736,7 +1610,6 @@ function toggleAxes() {
         .getElementById("btn-axes")
         .classList.toggle("is-on", showAxes);
 }
-
 function updateProjectionMatrix(newMatrix) {
     if(newMatrix){
         for (let i = 0; i < newMatrix.length; i++) {
@@ -1757,11 +1630,10 @@ function updateProjectionMatrix(newMatrix) {
     }
 
     if(surfacesTensor){
-        surfacesTensor.updateProjection();
+        // surfacesTensor.updateProjection();
         surfacesTensor.updateScreen();
     }
 }
-
 
 let periodCounts = surfacesTensorPeriodStart;
 function periodPlus(i) {
@@ -1802,4 +1674,97 @@ function periodicityMinus(i) {
 function updatePeriodicityCounter(i) {
     document.getElementById(`periodicityCount${i}`).innerText = periodicityCounts[i];
 }
+
+
+
+// ================= Texture Loading Utilities ==================
+let TextureImage = null;
+let textureLoadFailTimer = null;
+function shortenFileName(filename, maxLength = 10) {
+    if (filename.length <= maxLength) return filename;
+    const extIndex = filename.lastIndexOf('.');
+    const ext = extIndex >= 0 ? filename.slice(extIndex) : '';
+    const base = filename.slice(0, maxLength - ext.length - 1); // leave space for "…"
+    return base + '…' + ext;
+}
+
+function onTextureLoaded(filename, imageFile) {
+    const btn = document.getElementById("btn-load-texture");
+    const del = document.getElementById("btn-unload-texture");
+
+    btn.textContent =  shortenFileName(filename, 20); // truncate if too long;
+    btn.classList.add("is-on");
+
+    btn.style.fontSize = math.ceil((14* math.min(1,(12/ btn.textContent.length)))) +"px";
+
+    del.style.display = "inline-block";
+
+    TextureImage = imageFile;
+
+    if(surfacesTensor){
+        surfacesTensor.updateTexture(true,TextureImage);
+    }
+}
+function unloadTexture() {
+    customTexture = null;
+
+    const btn = document.getElementById("btn-load-texture");
+    const del = document.getElementById("btn-unload-texture");
+    const input = document.getElementById("texture-file-input");
+
+    btn.textContent = "Load texture";
+    btn.classList.remove("is-on");
+    btn.style.fontSize = "";
+
+    del.style.display = "none";
+    input.value = ""; // allow reloading same file
+
+    if(surfacesTensor){
+        surfacesTensor.updateTexture(false);
+    }
+}
+function onTextureLoadFailed(error,file) {
+    console.error("p5 loadImage failed", error);
+    alert("Failed to load image: " + file.name +". \nPlease try another file.");
+}
+function openTextureDialog() {
+    document.getElementById("texture-file-input").click();
+    document
+    .getElementById("texture-file-input")
+    .addEventListener("change", function (event) {
+
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onerror = () => { console.error("FileReader error while reading texture file"); reader.abort(); };
+        reader.onabort = () => { console.warn("FileReader aborted"); };
+        reader.onload = (e) => {
+            let imageLoadSuccess = false;
+            loadImage(
+                e.target.result,
+                imageFile => { // SUCCESS
+                    if(!imageLoadSuccess){
+                        imageLoadSuccess = true;
+                        onTextureLoaded(file.name, imageFile);
+                    }
+                },
+                error => { // FAILURE (may be called multiple times)
+                    if (imageLoadSuccess) return; // if one of the last tries was a success
+                    textureLoadFailTimer = setTimeout(() => {
+                        if (imageLoadSuccess) return;
+                        onTextureLoadFailed(error,file);
+                    }, 500); // debounce window
+                }
+            );
+
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+
+
+
 

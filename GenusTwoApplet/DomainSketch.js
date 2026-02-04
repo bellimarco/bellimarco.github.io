@@ -1,3 +1,4 @@
+// p5.js context mode
 let DomainSketch = function(p) {
 
     let surfacePlaneModel = {
@@ -153,7 +154,6 @@ let DomainSketch = function(p) {
         p.line(...surfacePlaneModel.Vertices['++']['Zk2'], ...surfacePlaneModel.Vertices['--']['Zk2']);
         p.strokeWeight(5);
         for (let y=S1_Y+dy; y<S2_Y-0.01; y+=dy){
-            console.log(dy);
             p.translate(0,+dy,0);
             p.line(...surfacePlaneModel.Vertices['++']['Inf-X'], ...surfacePlaneModel.Vertices['++']['Zmk2']);
             p.line(...surfacePlaneModel.Vertices['++']['InfX'], ...surfacePlaneModel.Vertices['++']['Zk2']);
