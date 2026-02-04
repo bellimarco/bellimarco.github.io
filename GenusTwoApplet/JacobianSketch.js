@@ -542,14 +542,12 @@ function preload() {
 }
 
 function setup() {
-    winWidth = windowWidth*0.8;
-    winHeight = math.min(0.75*winWidth,windowHeight*0.7);
+    winWidth = document.getElementById('Jacobian-canvas').offsetWidth-14;
+    winHeight = math.min(0.75*winWidth, document.getElementById('Jacobian-canvas').offsetHeight-14);
     canvas = createCanvas(winWidth, winHeight, WEBGL).parent('Jacobian-canvas');
     // drawingContext.disable(drawingContext.DEPTH_TEST);
     
-    setTimeout(()=>{
-        IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
-    },50);
+    IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
 
     textureMode(NORMAL); // important for correct uv texture coordinate 0<u,v<1
     frameRate(FPS);
@@ -557,6 +555,10 @@ function setup() {
     textSize(fontSize);
 
     if(!IsTouchDevice){ addScreenPositionFunction(); }
+
+    if(!IsTouchDevice) surfacesTensorPeriodicityStart = [3,1,2,2];
+    else surfacesTensorPeriodicityStart = [2,1,1,2];
+
 
     if(runAnimation) projectAnimation.setup();
 
@@ -588,9 +590,7 @@ function setup() {
 }
 
 function draw() {
-
     performanceMonitor.update();
-
 
     background(255);
 
@@ -609,10 +609,7 @@ function draw() {
     rotateZ(rotZ);
     translate(panX, panY, panZ);
 
-
-
     if(showAxes && !runAnimation && !IsTouchDevice){ updateAxis4Gizmo(); }
-    
 
     if(runAnimation && ( animationLastFrameCount + projectAnimation.frameFrequency < frameCount )){
         animationLastFrameCount += projectAnimation.frameFrequency;
@@ -675,8 +672,8 @@ const colors = {
 
 // ============= SURFACES =================
 let surfacesTensor;
-const surfacesTensorPeriodStart = [0,0,0,0];
-const surfacesTensorPeriodicityStart = [3,1,2,2];
+let surfacesTensorPeriodStart = [0,0,0,0];
+let surfacesTensorPeriodicityStart;
 let showVertexLabels = false;
 let showLineMeshes = false;
 let smoothingLevel = 2;

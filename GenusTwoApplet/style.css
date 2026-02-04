@@ -1,4 +1,9 @@
-body { font-family: sans-serif; text-align: center; }
+body {
+    font-family: sans-serif;
+    text-align: center;
+    align-items:center;
+    justify-content: center;
+}
 table { margin: 0 auto; border-collapse: collapse; }
 td, th { border: 1px solid #333; padding: 4px 8px; }
 
@@ -61,10 +66,11 @@ button.is-on:hover {
 } */
 #Jacobian-canvas {
     display: inline-flex;
-    padding: 5px;
+    padding: 7px;
     margin: 5px;
-    border: 1px solid #ddd;
+    border: 2px solid #ddd;
     background: #fafafa;
+    flex: 1 1 auto;
 }
 
 
@@ -165,11 +171,11 @@ button.is-on:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 40px;
+    width: 46px;
 }
 .period-column button {
-    width: 32px;
-    height: 28px;
+    width: 36px;
+    height: 32px;
     font-size: 1.2em;
     margin: 2px 0;
     padding: 0;
@@ -278,6 +284,7 @@ button.is-on:hover {
 }
 #projectionMatrixTemplates button {
     padding: 6px;
+    height: 36px;
 }
 
 
