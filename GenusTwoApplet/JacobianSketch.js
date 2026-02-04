@@ -543,10 +543,10 @@ function preload() {
 
 function setup() {
     winWidth = document.getElementById('Jacobian-canvas').offsetWidth-14;
-    winHeight = math.max(0.4*winWidth, document.getElementById('Jacobian-canvas').offsetHeight-14);
+    winHeight = document.getElementById('Jacobian-canvas').offsetHeight-14;
     canvas = createCanvas(winWidth, winHeight, WEBGL).parent('Jacobian-canvas');
     // drawingContext.disable(drawingContext.DEPTH_TEST);
-    
+
     IsTouchDevice = ( 'ontouchstart' in window || navigator.maxTouchPoints > 0 );
 
     textureMode(NORMAL); // important for correct uv texture coordinate 0<u,v<1

@@ -55,7 +55,7 @@ button.is-on:hover {
 
 
 #main-div {
-    display: flex;
+    display: inline-flex;
     width:95%;
     margin: 0 auto;
 }
